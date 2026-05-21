@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * EE_DMS_4_6_0_payments
+ *
+ * @package             Event Espresso
+ * @subpackage
+ * @author              Mike Nelson
+ */
+class EE_DMS_4_6_0_payments extends EE_Data_Migration_Script_Stage_Table
+{
+    protected string $_payment_method_table;
+
+
+    public function __construct()
+    {
+        global $wpdb;
+        $this->_old_table            = $wpdb->prefix . 'esp_payment';
+        $this->_payment_method_table = $wpdb->prefix . 'esp_payment_method';
+        $this->_pretty_name          = esc_html__('Payment-Payment Method Relations', 'event_espresso');
+        parent::__construct();
+    }
+
+
+    protected function _migrate_old_row($old_row)
+    {
+        global $wpdb;
+        // get the payment method's ID
+        $PMD_ID = apply_filters(
+            'FHEE__EE_DMS_4_6_0_payments__migrate_old_row__PMD_ID',
+            $this->_get_payment_method_id_by_gateway_name($old_row['PAY_gateway'], $old_row['PAY_method'])
+        );
+        if (! $PMD_ID) {
+            $this->add_error(
+                sprintf(
+                    esc_html__(
+                        'Could not find payment method with PMD_type = \'%1$s\' when migrating payment row %2$s so just assigned it an unknown payment method',
+                        'event_espresso'
+                    ),
+                    $old_row['PAY_gateway'],
+                    $this->_json_encode($old_row)
+                )
+            );
+            $PMD_ID = 0;
+        }
+        $new_values          = [
+            'PMD_ID'     => $PMD_ID,
+            'PAY_source' => ($old_row['PAY_via_admin'] ? 'ADMIN' : 'CART'),
+        ];
+        $wheres              = ['PAY_ID' => $old_row['PAY_ID']];
+        $new_value_datatypes = ['%d', '%s'];
+        $where_datatypes     = ['%d'];
+        $success             = $wpdb->update(
+            $this->_old_table,
+            $new_values,
+            $wheres,
+            $new_value_datatypes,
+            $where_datatypes
+        );
+        if (! $success) {
+            $this->add_error(
+                sprintf(
+                    esc_html__('Couldn\'t set %1$s row in table %2$s where %3$s', 'event_espresso'),
+                    $this->_json_encode($new_values),
+                    $this->_old_table,
+                    $this->_json_encode($wheres)
+                )
+            );
+        }
+    }
+
+
+    /**
+     *  array(
+     * 'PP' => esc_html__( 'PayPal', 'event_espresso' ),
+     * 'CC' => esc_html__( 'Credit Card', 'event_espresso' ),
+     * 'DB'=>  esc_html__("Debit Card", 'event_espresso'),
+     * 'CHQ' => esc_html__( 'Cheque', 'event_espresso' ),
+     * 'CSH' => esc_html__( 'Cash', 'event_espresso' ),
+     * 'BK'=>  esc_html__("Bank", 'event_espresso'),
+     * 'IV'=>  esc_html__("Invoice", 'event_espresso'),
+     * 'MO'=>  esc_html__("Money Order", 'event_espresso'),
+     *
+     * @param string $gateway_name
+     * @param string $old_pay_method_column
+     * @return string|null
+     * @global wpdb  $wpdb
+     */
+    protected function _get_payment_method_id_by_gateway_name(
+        string $gateway_name,
+        string $old_pay_method_column
+    ): ?string {
+        global $wpdb;
+        // convert from old known PAY_method values to their corresponding
+        // PMD_type or default PMD_name
+        switch ($old_pay_method_column) {
+            case 'PP':
+                $pmd_type = 'Paypal_Standard';
+                break;
+            case 'CC':
+                $pmd_type = 'Credit_Card';
+                break;
+            case 'DB':
+                $pmd_type = 'Debit_Card';
+                break;
+            case 'CHQ':
+                $pmd_type = 'Check';
+                break;
+            case 'CSH':
+                $pmd_type = 'Cash';
+                break;
+            case 'BK':
+                $pmd_type = 'Bank';
+                break;
+            case 'IV':
+                $pmd_type = 'Invoice';
+                break;
+            case 'MO':
+                $pmd_type = 'Money_Order';
+                break;
+            default:
+                $pmd_type = $gateway_name;
+        }
+        $pmd_name = str_replace("_", " ", $pmd_type);
+        return $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT PMD_ID FROM " . $wpdb->prefix . "esp_payment_method WHERE PMD_type = %s OR PMD_name = %s",
+                $pmd_type,
+                $pmd_name
+            )
+        );
+    }
+}

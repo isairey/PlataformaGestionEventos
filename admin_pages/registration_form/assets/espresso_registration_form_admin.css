@@ -1,0 +1,250 @@
+/*
+    Document   : espresso_registration_forms_admin
+    Created on : 29-Jan-2013, 10:30:18 AM
+    Author     : mnelson4
+    Description: Purpose of the stylesheet follows.
+*/
+
+#question_options .sample{ display:none; }
+
+.question-groups #the-list { cursor: move; }
+
+.espresso-admin .wp-list-table.questions .column-id {}
+.espresso-admin .wp-list-table.questions .column-order,
+.espresso-admin .wp-list-table.questions .column-admin_only,
+.espresso-admin .wp-list-table.questions .column-type,
+.espresso-admin .wp-list-table.questions .column-ajax_sort_handle { text-align: center; }
+.espresso-admin .wp-list-table.questions .column-display_text,
+.espresso-admin .wp-list-table.questions .column-admin_label { width: clamp(6rem, 25%, 16rem); }
+.espresso-admin .wp-list-table.questions .column-type,
+.espresso-admin .wp-list-table.questions .column-required,
+.espresso-admin .wp-list-table.questions .column-values { width: clamp(4rem, 15%, 8rem); }
+
+
+.espresso-admin .wp-list-table.questiongroups .column-id { width:5%; }
+.espresso-admin .wp-list-table.questiongroups .column-order,
+.espresso-admin .wp-list-table.questiongroups .column-ajax_sort_handle { width:5%; text-align: center; }
+.espresso-admin .wp-list-table.questiongroups .column-name,
+.espresso-admin .wp-list-table.questiongroups .column-description { width: clamp(6rem, 35%, 16rem); }
+.espresso-admin .wp-list-table.questiongroups .column-show_group_name,
+.espresso-admin .wp-list-table.questiongroups .column-show_group_desc {
+	width: clamp(4rem, 15%, 8rem);
+}
+
+.ee-question-sortable { cursor: move;}
+.ee-question-sortable label { cursor: inherit;}
+
+.question-group-questions .description {
+    color: #777;
+    font-style: normal;
+}
+.question-group-questions .question-list-sortable {
+    padding-left: 0;
+}
+.ee-question-sortable {
+    align-items: center;
+    border: 1px solid hsl(0, 0%, 90%);
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    margin-block-end: 1rem;
+    padding: 0;
+    padding-block: .5rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 0.5rem;
+    position: relative;
+}
+.ee-question-sortable:hover {
+    border-color: #444;
+}
+.ee-question-sortable .question-text h1,
+.ee-question-sortable .question-text h2,
+.ee-question-sortable .question-text h3,
+.ee-question-sortable .question-text h4,
+.ee-question-sortable .question-text h5,
+.ee-question-sortable .question-text p {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+}
+
+.ee-question-sortable label {
+    display: flex;
+}
+.ee-question-sortable input[type="checkbox"] {
+    margin-inline-start: 0;
+    margin-inline-end: 1rem;
+}
+.ee-question-sortable a {
+    margin-inline-start: auto;
+}
+
+#insert_question_group_event_form .questions-group-wrap,
+#update_question_group_event_form .questions-group-wrap {
+    align-items: flex-start;
+    flex-flow: row wrap;
+}
+
+#update_question_group_event_form .edit-group > h2,
+#insert_question_group_event_form .edit-group > h2 {
+    margin-block-start: unset;
+}
+
+.espresso-admin .ee-reg-form-questions.form-table thead th,
+.espresso-admin .ee-reg-form-questions.form-table tbody th {
+    width: 100%;
+}
+
+.espresso-admin .ee-reg-form-questions.form-table .ee-help-btn {
+    margin-inline-end: .25rem;
+}
+
+.espresso-admin .form-table #question_options td {
+    padding: 0;
+}
+.espresso-admin .form-table #question_options table.question-options-table {
+	width: 100%;
+}
+
+.espresso-admin .form-table #question_options table.question-options-table th,
+.espresso-admin .form-table #question_options table.question-options-table td {
+    display: flex;
+    padding: 0;
+	width: 100%;
+}
+.espresso-admin .form-table #question_options table.question-options-table th:last-child,
+.espresso-admin .form-table #question_options table.question-options-table td:last-child {
+    min-width: unset;
+    justify-content: flex-end;
+}
+.espresso-admin .form-table #question_options table.question-options-table td input:not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]) {
+    margin-inline-start: .25rem;
+}
+
+
+.espresso-admin .form-table .question-options-table tr {
+    flex-flow: column nowrap;
+}
+
+.espresso-admin .form-table td p.description.ee-system-question {
+    color: var(--ee-status-color-red);
+}
+
+.espresso-admin .ee-admin-page-form #post-body-content .form-table td p.description + p.description {
+    margin-block-start: .25rem;
+}
+
+.espresso-admin .form-table .question-options-table tr {
+    flex-flow: row nowrap;
+}
+
+.espresso-admin .form-table .question-options-table th,
+.espresso-admin .form-table .question-options-table td {
+    flex: 4 1 auto;
+}
+.espresso-admin .form-table .question-options-table th:first-child,
+.espresso-admin .form-table .question-options-table td:first-child {
+    flex: 3 1.25 auto;
+}
+.espresso-admin .form-table .question-options-table th:last-child,
+.espresso-admin .form-table .question-options-table td:last-child {
+    flex: 1 0 6rem;
+}
+
+.espresso-admin .form-table #question_options {
+    --ee-option-actions-width: calc(((var(--ee-button-height) + (var(--ee-margin-nano) * 2)) * 2) + var(--ee-margin-nano));
+    --ee-option-default-width: 5rem;
+    --ee-other-cells-width: calc(100% - var(--ee-option-actions-width) - var(--ee-option-default-width) - var(--ee-margin-micro));
+    --ee-option-value-width: calc(var(--ee-other-cells-width) * .33);
+    --ee-option-desc-width: calc(var(--ee-other-cells-width) * .66);
+    --ee-option-double-wide: calc(var(--ee-other-cells-width) * .99);
+}
+
+.espresso-admin .form-table #question_options table.question-options-table th {
+    align-items: baseline;
+}
+.espresso-admin .form-table #question_options table.question-options-table td select,
+.espresso-admin .form-table #question_options table.question-options-table td input[type="text"] {
+    max-width: 100%;
+}
+.espresso-admin .form-table #question_options table.question-options-table + .ee-admin-button-row {
+    margin-block-start: 0;
+}
+
+@media screen and (min-width:600px) {
+    .espresso-admin .form-table #question_options table.question-options-table td.no-default-label {
+        padding-block: 0.875rem;
+    }
+    .espresso-admin .form-table #question_options table.question-options-table td.no-default-label label {
+        font-weight: 400;
+        margin-block-start: 0;
+        margin-inline-start: auto;
+        text-align: end;
+    }
+    .espresso-admin .form-table #question_options table.question-options-table th.option-value-header,
+    .espresso-admin .form-table #question_options table.question-options-table td.option-value-cell {
+        display: inline-flex;
+        padding-inline-end: .5rem;
+        width: var(--ee-option-value-width);
+    }
+
+    .espresso-admin .form-table #question_options table.question-options-table th.option-desc-header,
+    .espresso-admin .form-table #question_options table.question-options-table td.option-desc-cell {
+        display: inline-flex;
+        padding-inline-end: .5rem;
+        width: var(--ee-option-desc-width);
+    }
+
+    .espresso-admin .form-table #question_options table.question-options-table th.option-default-header,
+    .espresso-admin .form-table #question_options table.question-options-table td.option-default-cell {
+        display: inline-flex;
+        justify-content: center;
+        padding-inline: .5rem;
+        width: var(--ee-option-default-width);
+    }
+    .espresso-admin .form-table #question_options table.question-options-table td.option-default-cell {
+        padding-block: .875rem;
+    }
+
+    .espresso-admin .form-table #question_options table.question-options-table th.option-actions-header,
+    .espresso-admin .form-table #question_options table.question-options-table td.option-actions-cell {
+        display: inline-flex;
+        padding-inline-end: .5rem;
+        width: var(--ee-option-actions-width);
+    }
+    .espresso-admin .form-table #question_options table.question-options-table th:last-child,
+    .espresso-admin .form-table #question_options table.question-options-table td:last-child {
+        padding-inline-end: 0;
+    }
+}
+
+
+@media screen and (min-width: 1920px) {
+    #group-details {
+        width: calc(100% - 25rem);
+    }
+    #group-questions {
+        margin-block-start: unset;
+        margin-inline-start: 1rem;
+        width: 24rem;
+    }
+}
+
+
+@media screen and ( max-width: 1366px ) {
+    .event-espresso_page_espresso_registration_form.espresso-admin #post-body {
+        display: flex;
+        flex-direction: column;
+    }
+    .event-espresso_page_espresso_registration_form.espresso-admin #post-body.columns-2 #postbox-container-1 {
+        float: unset;
+        margin: 0;
+        margin-block-start: 1rem;
+        width: 100%;
+    }
+
+    .event-espresso_page_espresso_registration_form.espresso-admin #post-body.columns-2 #post-body-content,
+    .event-espresso_page_espresso_registration_form.espresso-admin #post-body.columns-2 #postbox-container-1 > div {
+        width: 100%;
+    }
+}

@@ -1,0 +1,1656 @@
+<?php
+
+use EndyJasmi\Cuid;
+use EventEspresso\core\domain\services\event\EventSpacesCalculator;
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+use EventEspresso\core\exceptions\InvalidInterfaceException;
+use EventEspresso\core\exceptions\UnexpectedEntityException;
+use EventEspresso\core\services\request\sanitizers\AllowedTags;
+
+/**
+ * EE_Event
+ *
+ * @package               Event Espresso
+ * @subpackage            includes/models/
+ * @author                Mike Nelson
+ */
+class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Links, EEI_Has_Icon, EEI_Event
+{
+    /**
+     * cached value for the the logical active status for the event
+     *
+     * @see get_active_status()
+     * @var string
+     */
+    protected $_active_status = '';
+
+    /**
+     * This is just used for caching the Primary Datetime for the Event on initial retrieval
+     *
+     * @var EE_Datetime
+     */
+    protected $_Primary_Datetime;
+
+    /**
+     * @var EventSpacesCalculator $available_spaces_calculator
+     */
+    protected $available_spaces_calculator;
+
+
+    /**
+     * @param array  $props_n_values          incoming values
+     * @param string $timezone                incoming timezone (if not set the timezone set for the website will be
+     *                                        used.)
+     * @param array  $date_formats            incoming date_formats in an array where the first value is the
+     *                                        date_format and the second value is the time format
+     * @return EE_Event
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public static function new_instance($props_n_values = [], $timezone = '', $date_formats = []): EE_Event
+    {
+        $has_object = parent::_check_for_object($props_n_values, __CLASS__, $timezone, $date_formats);
+        return $has_object ?: new self($props_n_values, false, $timezone, $date_formats);
+    }
+
+
+    /**
+     * @param array  $props_n_values  incoming values from the database
+     * @param string $timezone        incoming timezone as set by the model.  If not set the timezone for
+     *                                the website will be used.
+     * @return EE_Event
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public static function new_instance_from_db($props_n_values = [], $timezone = ''): EE_Event
+    {
+        return new self($props_n_values, true, $timezone);
+    }
+
+
+    /**
+     * @return EventSpacesCalculator
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function getAvailableSpacesCalculator(): EventSpacesCalculator
+    {
+        if (! $this->available_spaces_calculator instanceof EventSpacesCalculator) {
+            $this->available_spaces_calculator = new EventSpacesCalculator($this);
+        }
+        return $this->available_spaces_calculator;
+    }
+
+
+    /**
+     * Overrides parent set() method so that all calls to set( 'status', $status ) can be routed to internal methods
+     *
+     * @param string $field_name
+     * @param mixed  $field_value
+     * @param bool   $use_default
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set($field_name, $field_value, $use_default = false)
+    {
+        switch ($field_name) {
+            case 'status':
+                $this->set_status($field_value, $use_default);
+                break;
+            default:
+                parent::set($field_name, $field_value, $use_default);
+        }
+    }
+
+
+    /**
+     *    set_status
+     * Checks if event status is being changed to SOLD OUT
+     * and updates event meta data with previous event status
+     * so that we can revert things if/when the event is no longer sold out
+     *
+     * @param string $status
+     * @param bool   $use_default
+     * @return void
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_status($status = '', $use_default = false)
+    {
+        // if nothing is set, and we aren't explicitly wanting to reset the status, then just leave
+        if (empty($status) && ! $use_default) {
+            return;
+        }
+        // get current Event status
+        $old_status = $this->status();
+        // if status has changed
+        if ($old_status !== $status) {
+            // TO sold_out
+            if ($status === EEM_Event::sold_out) {
+                // save the previous event status so that we can revert if the event is no longer sold out
+                $this->add_post_meta('_previous_event_status', $old_status);
+                do_action('AHEE__EE_Event__set_status__to_sold_out', $this, $old_status, $status);
+                // OR FROM  sold_out
+            } elseif ($old_status === EEM_Event::sold_out) {
+                $this->delete_post_meta('_previous_event_status');
+                do_action('AHEE__EE_Event__set_status__from_sold_out', $this, $old_status, $status);
+            }
+            // clear out the active status so that it gets reset the next time it is requested
+            $this->_active_status = null;
+            // update status
+            parent::set('status', $status, $use_default);
+            do_action('AHEE__EE_Event__set_status__after_update', $this);
+            return;
+        }
+        // even though the old value matches the new value, it's still good to
+        // allow the parent set method to have a say
+        parent::set('status', $status, $use_default);
+    }
+
+
+    /**
+     * Gets all the datetimes for this event
+     *
+     * @param array|null $query_params
+     * @return EE_Base_Class[]|EE_Datetime[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function datetimes(?array $query_params = []): array
+    {
+        return $this->get_many_related('Datetime', $query_params);
+    }
+
+
+    /**
+     * Gets all the datetimes for this event that are currently ACTIVE,
+     * meaning the datetime has started and has not yet ended.
+     *
+     * @param int|null   $start_date   timestamp to use for event date start time, defaults to NOW unless set to 0
+     * @param array|null $query_params will recursively replace default values
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function activeDatetimes(?int $start_date, ?array $query_params = []): array
+    {
+        // if start date is null, then use current time
+        $start_date = $start_date ?? time();
+        $where      = [];
+        if ($start_date) {
+            $where['DTT_EVT_start'] = ['<', $start_date];
+            $where['DTT_EVT_end']   = ['>', time()];
+        }
+        $query_params = array_replace_recursive(
+            [
+                $where,
+                'order_by' => ['DTT_EVT_start' => 'ASC'],
+            ],
+            $query_params
+        );
+        return $this->get_many_related('Datetime', $query_params);
+    }
+
+
+    /**
+     * Gets all the datetimes for this event, ordered by DTT_EVT_start in ascending order
+     *
+     * @return EE_Base_Class[]|EE_Datetime[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function datetimes_in_chronological_order(): array
+    {
+        return $this->get_many_related('Datetime', ['order_by' => ['DTT_EVT_start' => 'ASC']]);
+    }
+
+
+    /**
+     * Gets all the datetimes for this event, ordered by the DTT_order on the datetime.
+     * @todo We should probably UNSET timezone on the EEM_Datetime model
+     * after running our query, so that this timezone isn't set for EVERY query
+     * on EEM_Datetime for the rest of the request, no?
+     *
+     * @param bool     $show_expired whether or not to include expired events
+     * @param bool     $show_deleted whether or not to include deleted events
+     * @param int|null $limit
+     * @return EE_Datetime[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function datetimes_ordered(bool $show_expired = true, bool $show_deleted = false, ?int $limit = null): array
+    {
+        return EEM_Datetime::instance($this->_timezone)->get_datetimes_for_event_ordered_by_DTT_order(
+            $this->ID(),
+            $show_expired,
+            $show_deleted,
+            $limit
+        );
+    }
+
+
+    /**
+     * Returns one related datetime. Mostly only used by some legacy code.
+     *
+     * @return EE_Base_Class|EE_Datetime
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function first_datetime(): EE_Datetime
+    {
+        return $this->get_first_related('Datetime');
+    }
+
+
+    /**
+     * Returns the 'primary' datetime for the event
+     *
+     * @param bool $try_to_exclude_expired
+     * @param bool $try_to_exclude_deleted
+     * @return EE_Datetime|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function primary_datetime(
+        bool $try_to_exclude_expired = true,
+        bool $try_to_exclude_deleted = true
+    ): ?EE_Datetime {
+        if (! empty($this->_Primary_Datetime)) {
+            return $this->_Primary_Datetime;
+        }
+        $this->_Primary_Datetime = EEM_Datetime::instance($this->_timezone)->get_primary_datetime_for_event(
+            $this->ID(),
+            $try_to_exclude_expired,
+            $try_to_exclude_deleted
+        );
+        return $this->_Primary_Datetime;
+    }
+
+
+    /**
+     * Gets all the tickets available for purchase of this event
+     *
+     * @param array|null $query_params
+     * @return EE_Base_Class[]|EE_Ticket[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function tickets(?array $query_params = []): array
+    {
+        // first get all datetimes
+        $datetimes = $this->datetimes_ordered();
+        if (! $datetimes) {
+            return [];
+        }
+        $datetime_ids = [];
+        foreach ($datetimes as $datetime) {
+            $datetime_ids[] = $datetime->ID();
+        }
+        $where_params = ['Datetime.DTT_ID' => ['IN', $datetime_ids]];
+        // if incoming $query_params has where conditions let's merge but not override existing.
+        if (is_array($query_params) && isset($query_params[0])) {
+            $where_params = array_merge($query_params[0], $where_params);
+            unset($query_params[0]);
+        }
+        // now add $where_params to $query_params
+        $query_params[0] = $where_params;
+        return EEM_Ticket::instance()->get_all($query_params);
+    }
+
+
+    /**
+     * get all unexpired not-trashed tickets
+     *
+     * @return EE_Ticket[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function active_tickets(): array
+    {
+        return $this->tickets(
+            [
+                [
+                    'TKT_end_date' => ['>=', EEM_Ticket::instance()->current_time_for_query('TKT_end_date')],
+                    'TKT_deleted'  => false,
+                ],
+            ]
+        );
+    }
+
+
+    /**
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function additional_limit(): int
+    {
+        return $this->get('EVT_additional_limit');
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function allow_overflow(): bool
+    {
+        return $this->get('EVT_allow_overflow');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function created(): string
+    {
+        return $this->get('EVT_created');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function description(): string
+    {
+        return $this->get('EVT_desc');
+    }
+
+
+    /**
+     * Runs do_shortcode and wpautop on the description
+     *
+     * @return string of html
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function description_filtered(): string
+    {
+        return $this->get_pretty('EVT_desc');
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function display_description(): bool
+    {
+        return $this->get('EVT_display_desc');
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function display_ticket_selector(): bool
+    {
+        return (bool) $this->get('EVT_display_ticket_selector');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function external_url(): ?string
+    {
+        return $this->get('EVT_external_URL') ?? '';
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function member_only(): bool
+    {
+        return $this->get('EVT_member_only');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function phone(): string
+    {
+        return $this->get('EVT_phone');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function modified(): string
+    {
+        return $this->get('EVT_modified');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function name(): string
+    {
+        return $this->get('EVT_name');
+    }
+
+
+    /**
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function order(): int
+    {
+        return $this->get('EVT_order');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function default_registration_status(): string
+    {
+        $event_default_registration_status = $this->get('EVT_default_registration_status');
+        return ! empty($event_default_registration_status)
+            ? $event_default_registration_status
+            : EE_Registry::instance()->CFG->registration->default_STS_ID;
+    }
+
+
+    /**
+     * @param int|null    $num_words
+     * @param string|null $more
+     * @param bool        $not_full_desc
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function short_description(?int $num_words = 55, string $more = null, bool $not_full_desc = false): string
+    {
+        $short_desc = $this->get('EVT_short_desc');
+        if (! empty($short_desc) || $not_full_desc) {
+            return $short_desc;
+        }
+        $full_desc = $this->get('EVT_desc');
+        return wp_trim_words($full_desc, $num_words, $more);
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function slug(): string
+    {
+        return $this->get('EVT_slug');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function timezone_string(): string
+    {
+        return $this->get('EVT_timezone_string');
+    }
+
+
+    /**
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @deprecated
+     */
+    public function visible_on(): string
+    {
+        EE_Error::doing_it_wrong(
+            __METHOD__,
+            esc_html__(
+                'This method has been deprecated and there is no replacement for it.',
+                'event_espresso'
+            ),
+            '5.0.0.rc.002'
+        );
+        return $this->get('EVT_visible_on');
+    }
+
+
+    /**
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function wp_user(): int
+    {
+        return (int) $this->get('EVT_wp_user');
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function donations(): bool
+    {
+        return $this->get('EVT_donations');
+    }
+
+
+    /**
+     * @param int $limit
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_additional_limit(int $limit)
+    {
+        $this->set('EVT_additional_limit', $limit);
+    }
+
+
+    /**
+     * @param $created
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_created($created)
+    {
+        $this->set('EVT_created', $created);
+    }
+
+
+    /**
+     * @param $desc
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_description($desc)
+    {
+        $this->set('EVT_desc', $desc);
+    }
+
+
+    /**
+     * @param $display_desc
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_display_description($display_desc)
+    {
+        $this->set('EVT_display_desc', $display_desc);
+    }
+
+
+    /**
+     * @param $display_ticket_selector
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_display_ticket_selector($display_ticket_selector)
+    {
+        $this->set('EVT_display_ticket_selector', $display_ticket_selector);
+    }
+
+
+    /**
+     * @param $external_url
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_external_url($external_url)
+    {
+        $this->set('EVT_external_URL', $external_url);
+    }
+
+
+    /**
+     * @param $member_only
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_member_only($member_only)
+    {
+        $this->set('EVT_member_only', $member_only);
+    }
+
+
+    /**
+     * @param $event_phone
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_event_phone($event_phone)
+    {
+        $this->set('EVT_phone', $event_phone);
+    }
+
+
+    /**
+     * @param $modified
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_modified($modified)
+    {
+        $this->set('EVT_modified', $modified);
+    }
+
+
+    /**
+     * @param $name
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_name($name)
+    {
+        $this->set('EVT_name', $name);
+    }
+
+
+    /**
+     * @param $order
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_order($order)
+    {
+        $this->set('EVT_order', $order);
+    }
+
+
+    /**
+     * @param $short_desc
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_short_description($short_desc)
+    {
+        $this->set('EVT_short_desc', $short_desc);
+    }
+
+
+    /**
+     * @param $slug
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_slug($slug)
+    {
+        $this->set('EVT_slug', $slug);
+    }
+
+
+    /**
+     * @param $timezone_string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_timezone_string($timezone_string)
+    {
+        $this->set('EVT_timezone_string', $timezone_string);
+    }
+
+
+    /**
+     * @param $visible_on
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @deprecated
+     */
+    public function set_visible_on($visible_on)
+    {
+        EE_Error::doing_it_wrong(
+            __METHOD__,
+            esc_html__(
+                'This method has been deprecated and there is no replacement for it.',
+                'event_espresso'
+            ),
+            '5.0.0.rc.002'
+        );
+        $this->set('EVT_visible_on', $visible_on);
+    }
+
+
+    /**
+     * @param $wp_user
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_wp_user($wp_user)
+    {
+        $this->set('EVT_wp_user', $wp_user);
+    }
+
+
+    /**
+     * @param $default_registration_status
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_default_registration_status($default_registration_status)
+    {
+        $this->set('EVT_default_registration_status', $default_registration_status);
+    }
+
+
+    /**
+     * @param $donations
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function set_donations($donations)
+    {
+        $this->set('EVT_donations', $donations);
+    }
+
+
+    /**
+     * Adds a venue to this event
+     *
+     * @param int|EE_Venue /int $venue_id_or_obj
+     * @return EE_Base_Class|EE_Venue
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function add_venue($venue_id_or_obj): EE_Venue
+    {
+        return $this->_add_relation_to($venue_id_or_obj, 'Venue');
+    }
+
+
+    /**
+     * Removes a venue from the event
+     *
+     * @param EE_Venue /int $venue_id_or_obj
+     * @return EE_Base_Class|EE_Venue
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function remove_venue($venue_id_or_obj): EE_Venue
+    {
+        $venue_id_or_obj = ! empty($venue_id_or_obj) ? $venue_id_or_obj : $this->venue();
+        return $this->_remove_relation_to($venue_id_or_obj, 'Venue');
+    }
+
+
+    /**
+     * Gets the venue related to the event. May provide additional $query_params if desired
+     *
+     * @param array $query_params
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function venue_ID(array $query_params = []): int
+    {
+        $venue = $this->get_first_related('Venue', $query_params);
+        return $venue instanceof EE_Venue ? $venue->ID() : 0;
+    }
+
+
+    /**
+     * Gets the venue related to the event. May provide additional $query_params if desired
+     *
+     * @param array $query_params
+     * @return EE_Base_Class|EE_Venue|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function venue(array $query_params = []): ?EE_Venue
+    {
+        return $this->get_first_related('Venue', $query_params);
+    }
+
+
+    /**
+     * @param array $query_params
+     * @return EE_Base_Class[]|EE_Venue[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @deprecated 5.0.0.p
+     */
+    public function venues(array $query_params = []): array
+    {
+        $venue = $this->venue($query_params);
+        return $venue instanceof EE_Venue ? [$venue] : [];
+    }
+
+
+    /**
+     * check if event id is present and if event is published
+     *
+     * @return boolean true yes, false no
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    private function _has_ID_and_is_published(): bool
+    {
+        // first check if event id is present and not NULL,
+        // then check if this event is published (or any of the equivalent "published" statuses)
+        return
+            $this->ID() && $this->ID() !== null
+            && (
+                $this->status() === 'publish'
+                || $this->status() === EEM_Event::sold_out
+                || $this->status() === EEM_Event::postponed
+                || $this->status() === EEM_Event::cancelled
+            );
+    }
+
+
+    /**
+     * This simply compares the internal dates with NOW and determines if the event is upcoming or not.
+     *
+     * @return boolean true yes, false no
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function is_upcoming(): bool
+    {
+        // check if event id is present and if this event is published
+        if ($this->is_inactive()) {
+            return false;
+        }
+        // set initial value
+        $upcoming = false;
+        // next let's get all datetimes and loop through them
+        $datetimes = $this->datetimes_in_chronological_order();
+        foreach ($datetimes as $datetime) {
+            if ($datetime instanceof EE_Datetime) {
+                // if this dtt is expired then we continue cause one of the other datetimes might be upcoming.
+                if ($datetime->is_expired()) {
+                    continue;
+                }
+                // if this dtt is active then we return false.
+                if ($datetime->is_active()) {
+                    return false;
+                }
+                // otherwise let's check upcoming status
+                $upcoming = $datetime->is_upcoming();
+            }
+        }
+        return $upcoming;
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function is_active(): bool
+    {
+        // check if event id is present and if this event is published
+        if ($this->is_inactive()) {
+            return false;
+        }
+        // set initial value
+        $active = false;
+        // next let's get all datetimes and loop through them
+        $datetimes = $this->datetimes_in_chronological_order();
+        foreach ($datetimes as $datetime) {
+            if ($datetime instanceof EE_Datetime) {
+                // if this dtt is expired then we continue cause one of the other datetimes might be active.
+                if ($datetime->is_expired()) {
+                    continue;
+                }
+                // if this dtt is upcoming then we return false.
+                if ($datetime->is_upcoming()) {
+                    return false;
+                }
+                // otherwise let's check active status
+                $active = $datetime->is_active();
+            }
+        }
+        return $active;
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function is_expired(): bool
+    {
+        // check if event id is present and if this event is published
+        if ($this->is_inactive()) {
+            return false;
+        }
+        // set initial value
+        $expired = false;
+        // first let's get all datetimes and loop through them
+        $datetimes = $this->datetimes_in_chronological_order();
+        foreach ($datetimes as $datetime) {
+            if ($datetime instanceof EE_Datetime) {
+                // if this dtt is upcoming or active then we return false.
+                if ($datetime->is_upcoming() || $datetime->is_active()) {
+                    return false;
+                }
+                // otherwise let's check active status
+                $expired = $datetime->is_expired();
+            }
+        }
+        return $expired;
+    }
+
+
+    /**
+     * @return bool
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function is_inactive(): bool
+    {
+        // check if event id is present and if this event is published
+        if ($this->_has_ID_and_is_published()) {
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * calculate spaces remaining based on "saleable" tickets
+     *
+     * @param array|null $tickets
+     * @param bool       $filtered
+     * @return int|float
+     * @throws EE_Error
+     * @throws DomainException
+     * @throws UnexpectedEntityException
+     * @throws ReflectionException
+     */
+    public function spaces_remaining(?array $tickets = [], ?bool $filtered = true)
+    {
+        $this->getAvailableSpacesCalculator()->setActiveTickets($tickets);
+        $spaces_remaining = $this->getAvailableSpacesCalculator()->spacesRemaining();
+        return $filtered
+            ? apply_filters(
+                'FHEE_EE_Event__spaces_remaining',
+                $spaces_remaining,
+                $this,
+                $tickets
+            )
+            : $spaces_remaining;
+    }
+
+
+    /**
+     *    perform_sold_out_status_check
+     *    checks all of this event's datetime  reg_limit - sold values to determine if ANY datetimes have spaces
+     *    available... if NOT, then the event status will get toggled to 'sold_out'
+     *
+     * @return bool    return the ACTUAL sold out state.
+     * @throws EE_Error
+     * @throws DomainException
+     * @throws UnexpectedEntityException
+     * @throws ReflectionException
+     */
+    public function perform_sold_out_status_check(): bool
+    {
+        // get all tickets
+        $tickets     = $this->tickets(
+            [
+                'default_where_conditions' => 'none',
+                'order_by'                 => ['TKT_qty' => 'ASC'],
+            ]
+        );
+        $all_expired = true;
+        foreach ($tickets as $ticket) {
+            if (! $ticket->is_expired()) {
+                $all_expired = false;
+                break;
+            }
+        }
+        // if all the tickets are just expired, then don't update the event status to sold out
+        if ($all_expired) {
+            return true;
+        }
+        $spaces_remaining = $this->spaces_remaining($tickets);
+        if ($spaces_remaining < 1) {
+            if ($this->status() !== EEM_CPT_Base::post_status_private) {
+                $this->set_status(EEM_Event::sold_out);
+                $this->save();
+            }
+            $sold_out = true;
+        } else {
+            $sold_out = false;
+            // was event previously marked as sold out ?
+            if ($this->status() === EEM_Event::sold_out) {
+                // revert status to previous value, if it was set
+                $previous_event_status = $this->get_post_meta('_previous_event_status', true);
+                if ($previous_event_status) {
+                    $this->set_status($previous_event_status);
+                    $this->save();
+                }
+            }
+        }
+        do_action('AHEE__EE_Event__perform_sold_out_status_check__end', $this, $sold_out, $spaces_remaining, $tickets);
+        return $sold_out;
+    }
+
+
+    /**
+     * This returns the total remaining spaces for sale on this event.
+     *
+     * @return int|float
+     * @throws EE_Error
+     * @throws DomainException
+     * @throws UnexpectedEntityException
+     * @throws ReflectionException
+     * @uses EE_Event::total_available_spaces()
+     */
+    public function spaces_remaining_for_sale()
+    {
+        return $this->total_available_spaces(true);
+    }
+
+
+    /**
+     * This returns the total spaces available for an event
+     * while considering all the quantities on the tickets and the reg limits
+     * on the datetimes attached to this event.
+     *
+     * @param bool $consider_sold   Whether to consider any tickets that have already sold in our calculation.
+     *                              If this is false, then we return the most tickets that could ever be sold
+     *                              for this event with the datetime and tickets setup on the event under optimal
+     *                              selling conditions.  Otherwise we return a live calculation of spaces available
+     *                              based on tickets sold.  Depending on setup and stage of sales, this
+     *                              may appear to equal remaining tickets.  However, the more tickets are
+     *                              sold out, the more accurate the "live" total is.
+     * @return int|float
+     * @throws EE_Error
+     * @throws DomainException
+     * @throws UnexpectedEntityException
+     * @throws ReflectionException
+     */
+    public function total_available_spaces(bool $consider_sold = false)
+    {
+        $spaces_available = $consider_sold
+            ? $this->getAvailableSpacesCalculator()->spacesRemaining()
+            : $this->getAvailableSpacesCalculator()->totalSpacesAvailable();
+        return apply_filters(
+            'FHEE_EE_Event__total_available_spaces__spaces_available',
+            $spaces_available,
+            $this,
+            $this->getAvailableSpacesCalculator()->getDatetimes(),
+            $this->getAvailableSpacesCalculator()->getActiveTickets()
+        );
+    }
+
+
+    /**
+     * Checks if the event is set to sold out
+     *
+     * @param bool $actual  whether or not to perform calculations to not only figure the
+     *                      actual status but also to flip the status if necessary to sold
+     *                      out If false, we just check the existing status of the event
+     * @return boolean
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function is_sold_out(bool $actual = false): bool
+    {
+        if (! $actual) {
+            return $this->status() === EEM_Event::sold_out;
+        }
+        return $this->perform_sold_out_status_check();
+    }
+
+
+    /**
+     * Checks if the event is marked as postponed
+     *
+     * @return boolean
+     */
+    public function is_postponed(): bool
+    {
+        return $this->status() === EEM_Event::postponed;
+    }
+
+
+    /**
+     * Checks if the event is marked as cancelled
+     *
+     * @return boolean
+     */
+    public function is_cancelled(): bool
+    {
+        return $this->status() === EEM_Event::cancelled;
+    }
+
+
+    /**
+     * Get the logical active status in a hierarchical order for all the datetimes.  Note
+     * Basically, we order the datetimes by EVT_start_date.  Then first test on whether the event is published.  If its
+     * NOT published then we test for whether its expired or not.  IF it IS published then we test first on whether an
+     * event has any active dates.  If no active dates then we check for any upcoming dates.  If no upcoming dates then
+     * the event is considered expired.
+     * NOTE: this method does NOT calculate whether the datetimes are sold out when event is published.  Sold Out is a
+     * status set on the EVENT when it is not published and thus is done
+     *
+     * @param bool $reset
+     * @return bool | string - based on EE_Datetime active constants or FALSE if error.
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_active_status(bool $reset = false)
+    {
+        // if the active status has already been set, then just use that value (unless we are resetting it)
+        if (! empty($this->_active_status) && ! $reset) {
+            return $this->_active_status;
+        }
+        // first check if event id is present on this object
+        if (! $this->ID()) {
+            return false;
+        }
+        $where_params_for_event = [['EVT_ID' => $this->ID()]];
+        // if event is published:
+        if (
+            $this->status() === EEM_CPT_Base::post_status_publish
+            || $this->status() === EEM_CPT_Base::post_status_private
+        ) {
+            // active?
+            if (
+                EEM_Datetime::instance()->get_datetime_count_for_status(
+                    EE_Datetime::active,
+                    $where_params_for_event
+                ) > 0
+            ) {
+                $this->_active_status = EE_Datetime::active;
+            } else {
+                // upcoming?
+                if (
+                    EEM_Datetime::instance()->get_datetime_count_for_status(
+                        EE_Datetime::upcoming,
+                        $where_params_for_event
+                    ) > 0
+                ) {
+                    $this->_active_status = EE_Datetime::upcoming;
+                } else {
+                    // expired?
+                    if (
+                        EEM_Datetime::instance()->get_datetime_count_for_status(
+                            EE_Datetime::expired,
+                            $where_params_for_event
+                        ) > 0
+                    ) {
+                        $this->_active_status = EE_Datetime::expired;
+                    } else {
+                        // it would be odd if things make it this far
+                        // because it basically means there are no datetimes attached to the event.
+                        // So in this case it will just be considered inactive.
+                        $this->_active_status = EE_Datetime::inactive;
+                    }
+                }
+            }
+        } else {
+            // the event is not published, so let's just set it's active status according to its' post status
+            switch ($this->status()) {
+                case EEM_Event::sold_out:
+                    $this->_active_status = EE_Datetime::sold_out;
+                    break;
+                case EEM_Event::cancelled:
+                    $this->_active_status = EE_Datetime::cancelled;
+                    break;
+                case EEM_Event::postponed:
+                    $this->_active_status = EE_Datetime::postponed;
+                    break;
+                default:
+                    $this->_active_status = EE_Datetime::inactive;
+            }
+        }
+        return $this->_active_status;
+    }
+
+
+    /**
+     *    pretty_active_status
+     *
+     * @param boolean $echo whether to return (FALSE), or echo out the result (TRUE)
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function pretty_active_status(bool $echo = true): string
+    {
+        $active_status = $this->get_active_status();
+        $status        = "
+        <span class='event-active-status event-active-status-$active_status ee-status ee-status-bg--$active_status'>
+            " . EEH_Template::pretty_status($active_status, false, 'sentence') . "
+        </span >";
+        if ($echo) {
+            echo wp_kses($status, AllowedTags::getAllowedTags());
+            return '';
+        }
+        return $status;
+    }
+
+
+    /**
+     * @return bool|int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_number_of_tickets_sold()
+    {
+        $tkt_sold = 0;
+        if (! $this->ID()) {
+            return 0;
+        }
+        $datetimes = $this->datetimes();
+        foreach ($datetimes as $datetime) {
+            if ($datetime instanceof EE_Datetime) {
+                $tkt_sold += $datetime->sold();
+            }
+        }
+        return $tkt_sold;
+    }
+
+
+    /**
+     * This just returns a count of all the registrations for this event
+     *
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_count_of_all_registrations(): int
+    {
+        return EEM_Event::instance()->count_related($this, 'Registration');
+    }
+
+
+    /**
+     * This returns the ticket with the earliest start time that is
+     * available for this event (across all datetimes attached to the event)
+     *
+     * @return EE_Base_Class|EE_Ticket|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_ticket_with_earliest_start_time()
+    {
+        $where['Datetime.EVT_ID'] = $this->ID();
+        $query_params             = [$where, 'order_by' => ['TKT_start_date' => 'ASC']];
+        return EE_Registry::instance()->load_model('Ticket')->get_one($query_params);
+    }
+
+
+    /**
+     * This returns the ticket with the latest end time that is available
+     * for this event (across all datetimes attached to the event)
+     *
+     * @return EE_Base_Class|EE_Ticket|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_ticket_with_latest_end_time()
+    {
+        $where['Datetime.EVT_ID'] = $this->ID();
+        $query_params             = [$where, 'order_by' => ['TKT_end_date' => 'DESC']];
+        return EE_Registry::instance()->load_model('Ticket')->get_one($query_params);
+    }
+
+
+    /**
+     * This returns the number of different ticket types currently on sale for this event.
+     *
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function countTicketsOnSale(): int
+    {
+        $where = [
+            'Datetime.EVT_ID' => $this->ID(),
+            'TKT_start_date'  => ['<', time()],
+            'TKT_end_date'    => ['>', time()],
+        ];
+        return EEM_Ticket::instance()->count([$where]);
+    }
+
+
+    /**
+     * This returns whether there are any tickets on sale for this event.
+     *
+     * @return bool true = YES tickets on sale.
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function tickets_on_sale(): bool
+    {
+        return $this->countTicketsOnSale() > 0;
+    }
+
+
+    /**
+     * Gets the URL for viewing this event on the front-end. Overrides parent
+     * to check for an external URL first
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_permalink(): string
+    {
+        if ($this->external_url()) {
+            return $this->external_url();
+        }
+        return parent::get_permalink();
+    }
+
+
+    /**
+     * Gets the first term for 'espresso_event_categories' we can find
+     *
+     * @param array $query_params
+     * @return EE_Base_Class|EE_Term|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function first_event_category(array $query_params = []): ?EE_Term
+    {
+        $query_params[0]['Term_Taxonomy.taxonomy']     = 'espresso_event_categories';
+        $query_params[0]['Term_Taxonomy.Event.EVT_ID'] = $this->ID();
+        return EEM_Term::instance()->get_one($query_params);
+    }
+
+
+    /**
+     * Gets all terms for 'espresso_event_categories' we can find
+     *
+     * @param array $query_params
+     * @return EE_Base_Class[]|EE_Term[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function get_all_event_categories(array $query_params = []): array
+    {
+        $query_params[0]['Term_Taxonomy.taxonomy']     = 'espresso_event_categories';
+        $query_params[0]['Term_Taxonomy.Event.EVT_ID'] = $this->ID();
+        return EEM_Term::instance()->get_all($query_params);
+    }
+
+
+    /**
+     * Adds a question group to this event
+     *
+     * @param EE_Question_Group|int $question_group_id_or_obj
+     * @param bool                  $for_primary if true, the question group will be added for the primary
+     *                                           registrant, if false will be added for others. default: false
+     * @return EE_Base_Class|EE_Question_Group
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     */
+    public function add_question_group($question_group_id_or_obj, bool $for_primary = false): EE_Question_Group
+    {
+        // If the row already exists, it will be updated. If it doesn't, it will be inserted.
+        // That's in EE_HABTM_Relation::add_relation_to().
+        return $this->_add_relation_to(
+            $question_group_id_or_obj,
+            'Question_Group',
+            [
+                EEM_Event_Question_Group::instance()->fieldNameForContext($for_primary) => true,
+            ]
+        );
+    }
+
+
+    /**
+     * Removes a question group from the event
+     *
+     * @param EE_Question_Group|int $question_group_id_or_obj
+     * @param bool                  $for_primary if true, the question group will be removed from the primary
+     *                                           registrant, if false will be removed from others. default: false
+     * @return EE_Base_Class|EE_Question_Group|int
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    public function remove_question_group($question_group_id_or_obj, bool $for_primary = false)
+    {
+        // If the question group is used for the other type (primary or additional)
+        // then just update it. If not, delete it outright.
+        $existing_relation = $this->get_first_related(
+            'Event_Question_Group',
+            [
+                [
+                    'QSG_ID' => EEM_Question_Group::instance()->ensure_is_ID($question_group_id_or_obj),
+                ],
+            ]
+        );
+        $field_to_update   = EEM_Event_Question_Group::instance()->fieldNameForContext($for_primary);
+        $other_field       = EEM_Event_Question_Group::instance()->fieldNameForContext(! $for_primary);
+        if ($existing_relation->get($other_field) === false) {
+            // Delete it. It's now no longer for primary or additional question groups.
+            return $this->_remove_relation_to($question_group_id_or_obj, 'Question_Group');
+        }
+        // Just update it. They'll still use this question group for the other category
+        $existing_relation->save(
+            [
+                $field_to_update => false,
+            ]
+        );
+        return $question_group_id_or_obj;
+    }
+
+
+    /**
+     * Gets all the question groups, ordering them by QSG_order ascending
+     *
+     * @param array $query_params
+     * @return EE_Base_Class[]|EE_Question_Group[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see https://github.com/eventespresso/event-espresso-core/tree/master/docs/G--Model-System/model-query-params.md
+     */
+    public function question_groups(array $query_params = []): array
+    {
+        $query_params = ! empty($query_params) ? $query_params : ['order_by' => ['QSG_order' => 'ASC']];
+        return $this->get_many_related('Question_Group', $query_params);
+    }
+
+
+    /**
+     * Implementation for EEI_Has_Icon interface method.
+     *
+     * @return string
+     * @see EEI_Visual_Representation for comments
+     */
+    public function get_icon(): string
+    {
+        return '<span class="dashicons dashicons-flag"></span>';
+    }
+
+
+    /**
+     * Implementation for EEI_Admin_Links interface method.
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see EEI_Admin_Links for comments
+     */
+    public function get_admin_details_link(): string
+    {
+        return $this->get_admin_edit_link();
+    }
+
+
+    /**
+     * Implementation for EEI_Admin_Links interface method.
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @see EEI_Admin_Links for comments
+     */
+    public function get_admin_edit_link(): string
+    {
+        return EEH_URL::add_query_args_and_nonce(
+            [
+                'page'   => 'espresso_events',
+                'action' => 'edit',
+                'post'   => $this->ID(),
+            ],
+            admin_url('admin.php')
+        );
+    }
+
+
+    /**
+     * Implementation for EEI_Admin_Links interface method.
+     *
+     * @return string
+     * @see EEI_Admin_Links for comments
+     */
+    public function get_admin_settings_link(): string
+    {
+        return EEH_URL::add_query_args_and_nonce(
+            [
+                'page'   => 'espresso_events',
+                'action' => 'default_event_settings',
+            ],
+            admin_url('admin.php')
+        );
+    }
+
+
+    /**
+     * Implementation for EEI_Admin_Links interface method.
+     *
+     * @return string
+     * @see EEI_Admin_Links for comments
+     */
+    public function get_admin_overview_link(): string
+    {
+        return EEH_URL::add_query_args_and_nonce(
+            [
+                'page'   => 'espresso_events',
+                'action' => 'default',
+            ],
+            admin_url('admin.php')
+        );
+    }
+
+
+    /**
+     * @return string|null
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function registrationFormUuid(): ?string
+    {
+        return $this->get('FSC_UUID') ?? '';
+    }
+
+
+    /**
+     * Gets all the form sections for this event
+     *
+     * @return EE_Base_Class[]|EE_Form_Section[]
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function registrationForm(): array
+    {
+        $FSC_UUID = $this->registrationFormUuid();
+
+        if (empty($FSC_UUID)) {
+            return [];
+        }
+
+        return EEM_Form_Section::instance()->get_all(
+            [
+                [
+                    'OR' => [
+                        'FSC_UUID'      => $FSC_UUID, // top level form
+                        'FSC_belongsTo' => $FSC_UUID, // child form sections
+                    ],
+                ],
+                'order_by' => ['FSC_order' => 'ASC'],
+            ]
+        );
+    }
+
+
+    /**
+     * @param string $UUID
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function setRegistrationFormUuid(string $UUID): void
+    {
+        if (! Cuid::isCuid($UUID)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                /* translators: 1: UUID value, 2: UUID generator function. */
+                    esc_html__(
+                        'The supplied UUID "%1$s" is invalid or missing. Please use %2$s to generate a valid one.',
+                        'event_espresso'
+                    ),
+                    $UUID,
+                    '`Cuid::cuid()`'
+                )
+            );
+        }
+        $this->set('FSC_UUID', $UUID);
+    }
+
+
+    /**
+     * Get visibility status of event
+     *
+     * @param bool $hide_public
+     * @return string
+     */
+    public function get_visibility_status(bool $hide_public = true): string
+    {
+        if ($this->status() === 'private') {
+            return esc_html__('Private', 'event_espresso');
+        }
+        if (! empty($this->wp_post()->post_password)) {
+            return esc_html__('Password Protected', 'event_espresso');
+        }
+        if (! $hide_public) {
+            return esc_html__('Public', 'event_espresso');
+        }
+
+        return '';
+    }
+}

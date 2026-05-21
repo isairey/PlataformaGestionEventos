@@ -1,0 +1,138 @@
+<?php
+
+use EventEspresso\core\services\helpers\WordPressHooks;
+
+/**
+ * EEH_Class_Tools Helper
+ *
+ * @package             Event Espresso
+ * @subpackage          /helpers/
+ * @author              Brent Christensen
+ * @deprecated          5.0.0.p
+ * ------------------------------------------------------------------------
+ */
+class EEH_Class_Tools
+{
+    public static $i         = 0;
+
+    public static $file_line = null;
+
+
+    /**
+     *  get_called_class - for PHP versions < 5.3
+     *
+     * @access     public
+     * @author     origins:  http://stackoverflow.com/a/1542045
+     *  return string
+     */
+    public static function get_called_class()
+    {
+        $backtrace = debug_backtrace();
+        if (
+            isset($backtrace[2])
+            && is_array($backtrace[2])
+            && isset($backtrace[2]['class'])
+            && ! isset($backtrace[2]['file'])
+        ) {
+            return $backtrace[2]['class'];
+        } elseif (
+            isset($backtrace[3])
+            && is_array($backtrace[3])
+            && isset($backtrace[3]['class'])
+            && ! isset($backtrace[3]['file'])
+        ) {
+            return $backtrace[3]['class'];
+        } elseif (
+            isset($backtrace[2])
+            && is_array($backtrace[2])
+            && isset($backtrace[2]['file'])
+            && isset($backtrace[2]['line'])
+        ) {
+            if (self::$file_line == $backtrace[2]['file'] . $backtrace[2]['line']) {
+                self::$i++;
+            } else {
+                self::$i         = 0;
+                self::$file_line = $backtrace[2]['file'] . $backtrace[2]['line'];
+            }
+            // was  class method called via call_user_func ?
+            if (
+                $backtrace[2]['function'] == 'call_user_func' && isset($backtrace[2]['args'])
+                && is_array(
+                    $backtrace[2]['args']
+                )
+            ) {
+                if (isset($backtrace[2]['args'][0]) && isset($backtrace[2]['args'][0][0])) {
+                    $called_class = $backtrace[2]['args'][0][0];
+                    // is it an EE function ?
+                    if (strpos($called_class, 'EE') === 0) {
+                        $prefix_chars = strpos($called_class, '_') + 1;
+                        $prefix       = substr($called_class, 0, $prefix_chars);
+                        $classname    = substr($called_class, $prefix_chars, strlen($called_class));
+                        $classname    =
+                            $prefix . str_replace(' ', '_', ucwords(strtolower(str_replace('_', ' ', $classname))));
+                        return $classname;
+                    }
+                }
+            } else {
+                $lines = file($backtrace[2]['file']);
+                preg_match_all(
+                    '/([a-zA-Z0-9_]+)::' . $backtrace[2]['function'] . '/',
+                    $lines[ $backtrace[2]['line'] - 1 ],
+                    $matches
+                );
+                if (isset($matches[1]) && isset($matches[1][ self::$i ])) {
+                    return $matches[1][ self::$i ];
+                }
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     *  get_class_names_for_all_callbacks_on_hook
+     * returns an array of names for all classes that have methods registered as callbacks for the given action or
+     * filter hook
+     *
+     * @access     public
+     * @param string $hook
+     * @return     array
+     */
+    public static function get_class_names_for_all_callbacks_on_hook($hook = null)
+    {
+        // moved this function into new class since this class is now deprecated
+        return WordPressHooks::getClassNamesForAllCallbacksOnHook($hook);
+    }
+
+
+    /**
+     *  property_exists() with fallback for PHP versions < 5.3
+     *
+     * @access     public
+     * @param mixed object | string   $class
+     * @param string $property
+     * @return         boolean
+     * @throws ReflectionException
+     */
+    public static function has_property($class = null, $property = null)
+    {
+        // if $class or $property don't exist, then get out, cuz that would be like... fatal dude
+        if (empty($class) || empty($property)) {
+            return false;
+        }
+        // if your hosting company doesn't cut the mustard
+        if (version_compare(PHP_VERSION, '5.3.0') < 0) {
+            // just in case $class is an actual instantiated object
+            if (is_object($class)) {
+                return isset($class->{$property}) ? true : false;
+            } else {
+                // use reflection for < PHP 5.3 to get details using just the class name
+                $reflector = new ReflectionClass($class);
+                return $reflector->hasProperty($property);
+            }
+        } else {
+            // or try regular property exists method which works as expected in PHP 5.3+
+            return property_exists($class, $property);
+        }
+    }
+}

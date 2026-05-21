@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * Class EE_Template_Part_PriorityQueue
+ * SplPriorityQueue class configured to only accept instances of EE_Template_Part
+ * sorts list in ascending order based on priority set when adding template parts
+ *
+ * @package               Event Espresso
+ * @subpackage            core
+ * @author                Brent Christensen
+ */
+class EE_Template_Part_PriorityQueue extends SplPriorityQueue
+{
+    /**
+     * add
+     * attaches aTemplate_Part to the Collection
+     * and sets any supplied data associated with the current iterator entry
+     *
+     * @access public
+     * @param EE_Template_Part $object
+     * @param int              $priority
+     * @return bool
+     */
+    public function insert($object, $priority = 100): bool
+    {
+        if ($object instanceof EE_Template_Part) {
+            return parent::insert($object, $priority);
+        }
+        return false;
+    }
+
+
+    /**
+     * compare
+     * sorts EE_Template_Part in ascending order based on set priority
+     *
+     * @access public
+     * @param int $priority1
+     * @param int $priority2
+     * @return int
+     */
+    public function compare($priority1, $priority2): int
+    {
+        if ($priority1 === $priority2) {
+            return 0;
+        }
+        return $priority1 > $priority2 ? -1 : 1;
+    }
+}

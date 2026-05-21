@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * EE_Onsite_Gateway
+ *
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ *
+ * @package            Event Espresso
+ * @subpackage         core/libraries/payment_methods
+ * @author             Mike Nelson
+ */
+abstract class EE_Onsite_Gateway extends EE_Gateway
+{
+    /**
+     *
+     * @var $_gateway_url string|null
+     */
+    protected $_gateway_url = null;
+
+
+    public function __construct()
+    {
+        $this->_supports_sending_refunds = true;
+    }
+
+    /**
+     * Asks the gateway to do whatever it does to process the payment. Onsite gateways will
+     * usually send a request directly to the payment provider and update the payment's status based on that;
+     * whereas offsite gateways will usually just update the payment with the URL and query parameters to use
+     * for sending the request via http_remote_request(). Saving the payment from within this method is unnecessary,
+     * as it is the responsibility of client code to save it.
+     *
+     * @param EE_Payment|null $payment
+     * @param array|null      $billing_info {
+     *      @type $first_name   string
+     *      @type $last_name    string
+     *      @type $email        string
+     *      @type $address      string
+     *      @type $address2     string
+     *      @type $city         string
+     *      @type $state        string name of the state (NOT int)
+     *      @type $country      string 2-character ISO code see http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+     *      @type $zip          string
+     *      @type $phone        string
+     * } unless a child class specifies these array keys are NOT present
+     * @return EE_Payment updated
+     */
+    abstract public function do_direct_payment($payment, $billing_info = null);
+}

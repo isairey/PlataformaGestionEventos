@@ -1,0 +1,56 @@
+<?php
+
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuGroup;
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuItem;
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuTopLevel;
+
+/**
+ * General_Settings_Admin_Page_Init
+ *
+ * This contains the logic for setting up the General_Settings related pages.  Any methods without phpdoc comments have
+ * inline docs with parent class.
+ *
+ * NOTE:  TODO: This is a straight conversion from the legacy 3.1 settings page.  It is NOT optimized and will need
+ * modification to fully use the new system (and also will need adjusted when Events model is setup)
+ *
+ * @package           General_Settings_Admin_Page_Init
+ * @subpackage        includes/core/admin/General_Settings_Admin_Page_Init.core.php
+ * @author            Brent Christensen
+ */
+class General_Settings_Admin_Page_Init extends EE_Admin_Page_Init
+{
+    public function __construct()
+    {
+        // define some constants
+        if (! defined('GEN_SET_PG_SLUG')) {
+            define('GEN_SET_PG_SLUG', 'espresso_general_settings');
+            define('GEN_SET_LABEL', esc_html__('General Settings', 'event_espresso'));
+            define('GEN_SET_ADMIN', EE_ADMIN_PAGES . 'general_settings/');
+            define('GEN_SET_ADMIN_URL', admin_url('admin.php?page=' . GEN_SET_PG_SLUG));
+            define('GEN_SET_TEMPLATE_PATH', GEN_SET_ADMIN . 'templates/');
+            define('GEN_SET_ASSETS_URL', EE_ADMIN_PAGES_URL . 'general_settings/assets/');
+        }
+        parent::__construct();
+    }
+
+
+    protected function _set_init_properties()
+    {
+        $this->label = GEN_SET_LABEL;
+    }
+
+
+    public function getMenuProperties(): array
+    {
+        return [
+            'menu_type'    => AdminMenuItem::TYPE_MENU_SUB_ITEM,
+            'menu_group'   => AdminMenuGroup::MENU_SLUG_SETTINGS,
+            'menu_order'   => 20,
+            'show_on_menu' => AdminMenuItem::DISPLAY_BLOG_ONLY,
+            'parent_slug'  => AdminMenuTopLevel::MENU_PARENT_ACTIVE,
+            'menu_slug'    => GEN_SET_PG_SLUG,
+            'menu_label'   => GEN_SET_LABEL,
+            'capability'   => 'manage_options',
+        ];
+    }
+}

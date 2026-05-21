@@ -1,0 +1,298 @@
+.espresso-admin .wp-list-table th.column-primary.column-to.sorted > a,
+.espresso-admin .wp-list-table th.column-primary.column-to.sortable > a {
+    justify-content: flex-start;
+}
+
+.ee-msg-admin-header {
+    align-items: center;
+    display: flex;
+    flex-flow:  row wrap;
+    background: white;
+    box-sizing: border-box;
+    margin-block-end: var(--ee-base-ui-scale);
+    padding: var(--ee-base-ui-scale);
+    width: 100%;
+}
+
+/* .espresso-admin #ee-msg-edit-frm  #post-body.columns-2 #postbox-container-1 {
+    margin-block-start: -5.5rem;
+} */
+
+#mtp_valid_shortcodes .shortcode-field-table {
+    margin-top: calc(.75 * var(--ee-base-ui-scale));
+}
+
+#mtp_valid_shortcodes .ee-shortcode-table-scroll {
+    max-height: 400px;
+    overflow: auto;
+}
+
+#ee-msg-context-switcher-frm {
+    display: inline-block;
+}
+.messages-preview-button {
+    display: inline-block;
+}
+
+#espresso_espresso_messages_editor_overview #minor-publishing {
+    border: none;
+}
+
+#minor-publishing ul li {
+    text-align: right;
+}
+
+.resetbutton {
+    margin-right: 5px;
+}
+
+.mtp-inactive {
+    color: var(--ee-status-color-grey);
+}
+
+/** editor styles **/
+#ee-msg-non-global-fields-MTP_description {
+    height: 150px;
+}
+
+.non-global-mtp-fields {
+    padding-block: var(--ee-base-ui-scale);
+}
+
+.ee-msg-switcher-container {
+    align-items: center;
+    display: flex;
+    flex-flow: row wrap;
+    margin: 0;
+}
+.ee-msg-switcher-container select {
+    width: 16rem;
+}
+
+#mtp_valid_shortcodes .shortcode-field-table {
+    margin-top: calc(.75 * var(--ee-base-ui-scale));
+}
+
+#mtp_valid_shortcodes .ee-shortcode-table-scroll {
+    max-height: 400px;
+    overflow: auto;
+}
+
+#ee-msg-context-switcher-frm {
+    display: flex;
+    flex-flow: row wrap;
+}
+#ee-recipient-select {
+    width: 15rem;
+}
+#submit-msg-context-switcher-sbmt {
+    width: auto;
+}
+.messages-preview-button {
+    display: inline-block;
+    margin-inline: var(--ee-base-ui-scale);
+}
+
+#espresso_espresso_messages_editor_overview #minor-publishing {
+    border: none;
+}
+
+#minor-publishing ul li {
+    text-align: right;
+}
+
+.resetbutton {
+    margin-right: calc(.25 * var(--ee-base-ui-scale));
+}
+
+.mtp-inactive {
+    color: var(--ee-status-color-grey);
+}
+
+
+#ee-msg-non-global-fields-MTP_description {
+    height: 150px;
+}
+
+
+#ee-msg-edit-frm h4,
+#ee-msg-edit-frm .admin-primary-mbox-dv label {
+    display: block;
+    font-size: var(--ee-font-size-bigger);
+    font-weight: 600;
+    margin: 0;
+    margin-block-end: calc(.5 * var(--ee-base-ui-scale));
+}
+#ee-msg-edit-frm h4 {
+    margin-block-start: calc(1.5 * var(--ee-base-ui-scale));
+}
+#ee-msg-edit-frm .admin-primary-mbox-dv label > span {
+    color: var(--ee-status-color-red);
+    font-size: var(--ee-font-size-xl);
+    font-weight: 700;
+}
+
+#ee-msg-edit-frm .admin-primary-mbox-dv label.ee-msg-small-label {
+    font-size: var(--ee-font-size-big);
+    font-weight: 400;
+    margin-block-end: calc(.375 * var(--ee-base-ui-scale));
+}
+
+
+
+/** overview table styles **/
+.espresso-admin .wp-list-table.messages  th:not(.column-message_type) {
+    white-space: nowrap;
+}
+.espresso-admin .wp-list-table.messages  th.column-primary.column-to,
+.espresso-admin .wp-list-table.messages  td.column-primary.column-to,
+.espresso-admin .wp-list-table.messagetemplate  th.column-primary.column-to,
+.espresso-admin .wp-list-table.messagetemplate  td.column-primary.column-to {
+  max-width: unset;
+  min-width: unset;
+  padding-inline: var(--ee-base-ui-scale);
+  width: 15%;
+}
+
+.espresso-admin .wp-list-table.messages .column-name,
+.espresso-admin .wp-list-table.messagetemplate .column-name {
+    width: 15%;
+}
+
+.espresso-admin .wp-list-table.messages .column-messenger,
+.espresso-admin .wp-list-table.messagetemplate .column-messenger {
+    max-width: 12rem;
+}
+
+/* .espresso-admin .wp-list-table.messages .column-message_type,
+.espresso-admin .wp-list-table.messagetemplate .column-message_type {
+    width: 15%;
+} */
+
+.espresso-admin .wp-list-table.messages .column-recipients,
+.espresso-admin .wp-list-table.messagetemplate .column-recipients,
+.espresso-admin .wp-list-table.messages .column-description,
+.espresso-admin .wp-list-table.messagetemplate .column-description {
+    max-width: 24rem;
+}
+
+.espresso-admin .wp-list-table.messages .column-events,
+.espresso-admin .wp-list-table.messagetemplate .column-events {
+    width: 10%;
+    text-align: center;
+}
+
+
+
+/** status incomplete (queued for generation) **/
+.msg-status-MIC,
+.msg-status-MIC .check-column {
+    border-left-color: var(--ee-status-color-grey);  /* prev: #A39D9C */
+}
+.ee-status-legend-MIC {
+    background-color: var(--ee-status-color-grey);  /* prev: #A39D9C */
+}
+
+
+/** status idle (queued for sending) **/
+.msg-status-MID,
+.msg-status-MID .check-column {
+    border-left-color: var(--ee-status-color-light-blue); /* prev: #00B1CA */
+}
+.ee-status-legend-MID {
+    background-color: var(--ee-status-color-light-blue); /* prev: #00B1CA */
+}
+
+
+/** status resend (queued for resending) **/
+.msg-status-MRS,
+.msg-status-MRS .check-column {
+    border-left-color: var(--ee-status-color-blue); /* prev: #FCB93C */
+}
+.ee-status-legend-MRS {
+    background-color: var(--ee-status-color-blue); /* prev: #FCB93C */
+}
+
+
+/** status executing **/
+.msg-status-MEX,
+.msg-status-MEX .check-column {
+    border-left-color: var(--ee-status-color-green);  /* prev: #ff6faa */
+}
+.ee-status-legend-MEX {
+    background-color: var(--ee-status-color-green);  /* prev: #ff6faa */
+}
+
+
+/** status sent **/
+.msg-status-MSN,
+.msg-status-MSN .check-column {
+    border-left-color: var(--ee-status-color-dark-green);  /* prev: #70CC50 */
+}
+.ee-status-legend-MSN {
+    background-color: var(--ee-status-color-dark-green);  /* prev: #70CC50 */
+}
+
+
+/** status failed **/
+.msg-status-MFL,
+.msg-status-MFL .check-column {
+    border-left-color: var(--ee-status-color-pink);  /* prev: #E44064 */
+}
+.ee-status-legend-MFL {
+    background-color: var(--ee-status-color-pink);  /* prev: #E44064 */
+}
+
+
+/** status debug ? **/
+.msg-status-MDO,
+.msg-status-MDO .check-column {
+    border-left-color: var(--ee-status-color-red);  /* prev: #D2D405 */;
+}
+.ee-status-legend-MDO {
+    background-color: var(--ee-status-color-red);  /* prev: #D2D405 */;
+}
+
+
+/** status retry (failed sending but can be retried) **/
+.msg-status-MRT,
+.msg-status-MRT .check-column {
+    border-left-color: var(--ee-status-color-orange); /* prev: #E76700 */
+}
+.ee-status-legend-MRT {
+    background-color: var(--ee-status-color-orange); /* prev: #E76700 */
+}
+
+
+/** context toggle **/
+ .context-active-control-container {
+     align-items: center;
+     background: white;
+     display: flex;
+     /* grid-area: msg-header-1; */
+     padding: var(--ee-base-ui-scale) 0 var(--ee-base-ui-scale) var(--ee-base-ui-scale);
+     width: 40rem;
+     --ee-switch-size: 1.5rem;
+     --ee-switch-size-btn: calc(var(--ee-switch-size) * .75);
+     --ee-switch-size-width: calc(var(--ee-switch-size) * 2);
+}
+ .context-active-control-container .spinner {
+     margin: 0;
+     margin-inline: var(--ee-base-ui-scale);
+}
+.activate_context_on_off_toggle_container {
+    align-items: center;
+    display: flex;
+    width: 100%;
+}
+.activate_context_on_off_toggle_container .ee-on-off-toggle-label {
+    /* width: 24rem; */
+    margin-inline-end: var(--ee-base-ui-scale);
+}
+.activate_context_on_off_toggle_container #ee-on-off-toggle-primary_attendee {
+    display: none;
+}
+
+.espresso-admin.wp-core-ui .messages .mce-statusbar.mce-container.mce-panel.mce-stack-layout-item {
+    border-block-end-width: 2px !important;
+}

@@ -1,0 +1,1001 @@
+/**
+* Event Espresso admin menu styles
+*/
+:root {
+    --ee-base-ui-scale: .9rem;
+}
+
+.espresso-admin-font-size-tiny {
+    --ee-base-ui-scale: .6rem;
+}
+
+.espresso-admin-font-size-smaller {
+    --ee-base-ui-scale: .7rem;
+}
+
+.espresso-admin-font-size-small {
+    --ee-base-ui-scale: .8rem;
+}
+
+.espresso-admin-font-size-default {
+    --ee-base-ui-scale: .9rem;
+}
+
+.espresso-admin-font-size-big {
+    --ee-base-ui-scale: 1rem;
+}
+
+.espresso-admin-font-size-bigger {
+    --ee-base-ui-scale: 1.1rem;
+}
+
+/* CONSTANTS */
+.wp-admin {
+    --ee-size-pico: calc(.0625 * var(--ee-base-ui-scale));
+    --ee-size-nano: calc(.125 * var(--ee-base-ui-scale));
+    --ee-size-micro: calc(.25 * var(--ee-base-ui-scale));
+    --ee-size-tiny: calc(.375 * var(--ee-base-ui-scale));
+    --ee-size-smaller: calc(.5 * var(--ee-base-ui-scale));
+    --ee-size-small: calc(.625 * var(--ee-base-ui-scale));
+    --ee-size-default: calc(.75 * var(--ee-base-ui-scale));
+    --ee-size-big: var(--ee-base-ui-scale);
+    --ee-size-bigger: calc(1.25 * var(--ee-base-ui-scale));
+    --ee-size-huge: calc(1.5 * var(--ee-base-ui-scale));
+    --ee-size-extreme: calc(2 * var(--ee-base-ui-scale));
+    --ee-size-insano: calc(2.5 * var(--ee-base-ui-scale));
+}
+
+
+@media only screen and (min-width: 768px) {
+    .wp-admin {
+        --ee-size-pico: calc(.125 * var(--ee-base-ui-scale));
+        --ee-size-nano: calc(.25 * var(--ee-base-ui-scale));
+        --ee-size-micro: calc(.375 * var(--ee-base-ui-scale));
+        --ee-size-tiny: calc(.5 * var(--ee-base-ui-scale));
+        --ee-size-smaller: calc(.625 * var(--ee-base-ui-scale));
+        --ee-size-small: calc(.75 * var(--ee-base-ui-scale));
+        --ee-size-default: var(--ee-base-ui-scale);
+        --ee-size-big: calc(1.25 * var(--ee-base-ui-scale));
+        --ee-size-bigger: calc(1.5 * var(--ee-base-ui-scale));
+        --ee-size-huge: calc(2 * var(--ee-base-ui-scale));
+        --ee-size-extreme: calc(2.5 * var(--ee-base-ui-scale));
+        --ee-size-insano: calc(3 * var(--ee-base-ui-scale));
+    }
+}
+
+@media only screen and (min-width: 1440px) {
+    .wp-admin {
+        --ee-size-pico: calc(.25 * var(--ee-base-ui-scale));
+        --ee-size-nano: calc(.375 * var(--ee-base-ui-scale));
+        --ee-size-micro: calc(.5 * var(--ee-base-ui-scale));
+        --ee-size-tiny: calc(.625 * var(--ee-base-ui-scale));
+        --ee-size-smaller: calc(.75 * var(--ee-base-ui-scale));
+        --ee-size-small: var(--ee-base-ui-scale);
+        --ee-size-default: calc(1.25 * var(--ee-base-ui-scale));
+        --ee-size-big: calc(1.5 * var(--ee-base-ui-scale));
+        --ee-size-bigger: calc(2 * var(--ee-base-ui-scale));
+        --ee-size-huge: calc(2.5 * var(--ee-base-ui-scale));
+        --ee-size-extreme: calc(3 * var(--ee-base-ui-scale));
+        --ee-size-mega: calc(4 * var(--ee-base-ui-scale));
+        --ee-size-insano: calc(6 * var(--ee-base-ui-scale));
+    }
+}
+
+.wp-admin {
+    --ee-margin-pico: var(--ee-size-pico);
+    --ee-margin-nano: var(--ee-size-nano);
+    --ee-margin-micro: var(--ee-size-micro);
+    --ee-margin-tiny: var(--ee-size-tiny);
+    --ee-margin-smaller: var(--ee-size-smaller);
+    --ee-margin-small: var(--ee-size-small);
+    --ee-margin-default: var(--ee-size-default);
+    --ee-margin-big: var(--ee-size-big);
+    --ee-margin-bigger: var(--ee-size-bigger);
+    --ee-margin-huge: var(--ee-size-huge);
+    --ee-margin-extreme: var(--ee-size-extreme);
+
+    --ee-padding-pico: var(--ee-size-pico);
+    --ee-padding-nano: var(--ee-size-nano);
+    --ee-padding-micro: var(--ee-size-micro);
+    --ee-padding-tiny: var(--ee-size-tiny);
+    --ee-padding-smaller: var(--ee-size-smaller);
+    --ee-padding-small: var(--ee-size-small);
+    --ee-padding-default: var(--ee-size-default);
+    --ee-padding-big: var(--ee-size-big);
+    --ee-padding-bigger: var(--ee-size-bigger);
+    --ee-padding-huge: var(--ee-size-huge);
+    --ee-padding-extreme: var(--ee-size-extreme);
+
+    --ee-line-height-modifier: 1.5;
+
+    --ee-font-size-nano: calc(.6 * var(--ee-base-ui-scale)); /* 9.6px */
+    --ee-font-size-micro: calc(.675 * var(--ee-base-ui-scale)); /* 10.8px */
+    --ee-font-size-tiny: calc(.75 * var(--ee-base-ui-scale)); /* 12px */
+    --ee-font-size-smaller: calc(.825 * var(--ee-base-ui-scale)); /* 13.2px */
+    --ee-font-size-small: calc(.9 * var(--ee-base-ui-scale)); /* 14.4px */
+    --ee-font-size-default: var(--ee-base-ui-scale); /* 16px */
+    --ee-font-size-big: calc(1.125 * var(--ee-base-ui-scale)); /* 18px */
+    --ee-font-size-bigger: calc(1.25 * var(--ee-base-ui-scale)); /* 20px */
+    --ee-font-size-lg: calc(1.375 * var(--ee-base-ui-scale)); /* 22px */
+    --ee-font-size-xl: calc(1.5 * var(--ee-base-ui-scale)); /* 24px */
+    --ee-font-size-2xl: calc(1.625 * var(--ee-base-ui-scale)); /* 26px */
+    --ee-font-size-3xl: calc(1.75 * var(--ee-base-ui-scale)); /* 28px */
+    --ee-font-size-4xl: calc(2 * var(--ee-base-ui-scale)); /* 32px */
+    --ee-font-size-5xl: calc(2.5 * var(--ee-base-ui-scale)); /* 40px */
+    --ee-font-size-6xl: calc(3 * var(--ee-base-ui-scale)); /* 48px */
+    --ee-font-size-7xl: calc(4 * var(--ee-base-ui-scale)); /* 64px */
+    --ee-font-size-8xl: calc(5 * var(--ee-base-ui-scale)); /* 80px */
+    --ee-font-size-9xl: calc(6 * var(--ee-base-ui-scale)); /* 96px */
+
+    --ee-icon-button-size-nano: calc(1 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-micro: calc(1.25 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-tiny: calc(1.625 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-small: calc(2 * var(--ee-base-ui-scale));
+    --ee-icon-button-size: calc(2.375 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-big: calc(2.75 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-bigger: calc(3.25 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-huge: calc(3.875 * var(--ee-base-ui-scale));
+    --ee-icon-button-size-extreme: calc(4.5 * var(--ee-base-ui-scale));
+
+    --ee-button-height: var(--ee-icon-button-size);
+    --ee-button-height-three-quarter: calc(var(--ee-button-height) * .75);
+    --ee-button-height-two-thirds: calc(var(--ee-button-height) / 3 * 2);
+    --ee-button-height-half: calc(var(--ee-button-height) / 2);
+    --ee-button-height-third: calc(var(--ee-button-height) / 3);
+    --ee-button-height-forth: calc(var(--ee-button-height) / 4);
+    --ee-button-height-sixth: calc(var(--ee-button-height) / 6);
+    --ee-button-height-shim: calc(var(--ee-button-height) / 12);
+
+    --ee-input-height: calc(var(--ee-button-height) + 1px);
+    --ee-checkbox-height: calc(1.5 * var(--ee-base-ui-scale));
+
+    --ee-switch-width: calc(3.6 * var(--ee-base-ui-scale));
+    --ee-switch-height: calc(1.8 * var(--ee-base-ui-scale));
+    --ee-switch-padding: calc(.3 * var(--ee-base-ui-scale));
+    --ee-switch-button: calc(var(--ee-switch-height) - (var(--ee-switch-padding) * 2));
+
+    --ee-border-radius-zero: 0;
+    --ee-border-radius-nano: calc(.5 * var(--ee-size-pico));
+    --ee-border-radius-tiny: var(--ee-size-pico);
+    --ee-border-radius-small: var(--ee-size-nano);
+    --ee-border-radius: var(--ee-size-tiny);
+    --ee-border-radius-big: var(--ee-size-small);
+    --ee-border-radius-lg: var(--ee-size-default);
+    --ee-border-radius-full: 999rem;
+
+    /* COLORS */
+
+    --ee-color-white: hsl(207, 0%, 100%);
+    --ee-color-white-transparent: hsla(207, 0%, 100%, 50%);
+    --ee-color-may-as-well-be-white: hsl(207, 0%, 97.5%);
+    --ee-color-almost-white: hsl(207, 0%, 95%);
+    --ee-color-off-white: hsl(207, 0%, 90%);
+    --ee-color-white-cloud: hsl(207, 5%, 87.5%);
+    --ee-color-grey-cloud: hsl(207, 5%, 75%);
+    --ee-status-color-pink: hsl(340, 100%, 75%);
+    --ee-status-color-hot-pink: hsl(342, 79%, 68%);
+    --ee-status-color-red: hsl(350, 95%, 65%);
+    --ee-status-color-orange: hsl(20, 100%, 70%);
+    --ee-status-color-orange-high-contrast: hsl(20, 100%, 40%);
+    --ee-status-color-gold: hsl(40, 100%, 55%);
+    --ee-status-color-yellow: hsl(50, 100%, 50%);
+    --ee-status-color-pale-yellow: hsl(50, 75%, 80%);
+    --ee-status-color-yellow-desat: hsl(50, 50%, 50%);
+    --ee-status-color-dark-green: hsl(95, 55%, 30%);
+    --ee-status-color-green: hsl(140, 90%, 40%);
+    --ee-status-color-dark-green-low-contrast: hsl(140, 90%, 50%);
+    --ee-status-color-green-high-contrast: hsl(140, 100%, 30%);
+    --ee-status-color-light-green: hsl(145, 40%, 50%);
+    --ee-status-color-blue-green: hsl(176, 100%, 35%);
+    --ee-status-color-blue: hsl(203, 65%, 55%);
+    --ee-status-color-blue-grey: hsl(203, 45%, 75%);
+    --ee-status-color-dark-blue: hsl(210, 100%, 30%);
+    --ee-status-color-blue-high-contrast: hsl(203, 65%, 42%);
+    --ee-status-color-blue-low-contrast: hsl(203, 75%, 65%);
+    --ee-status-color-light-blue: hsl(203, 95%, 75%);
+    --ee-status-color-pale-blue: hsl(203, 60%, 95%);
+    --ee-status-color-violet: hsl(239, 40%, 65%);
+    --ee-status-color-purple: hsl(279, 40%, 55%);
+    --ee-status-color-light-purple: hsl(279, 40%, 75%);
+    --ee-status-color-pale-grey: hsl(219, 2%, 75%);
+    --ee-status-color-light-grey: hsl(219, 2%, 55%);
+    --ee-status-color-grey: hsl(225, 2%, 37.5%);
+    --ee-status-color-dark-grey: hsl(225, 2%, 25%);
+    --ee-status-color-charcoal: hsl(225, 0%, 15%);
+    --ee-text-on-status-color-yellow: hsl(50, 50%, 15%);
+
+    --ee-feature-highlight-2024: hsl(187, 80%, 60%);
+    --ee-feature-highlight-2024-bg: hsl(187, 80%, 95%);
+    --ee-feature-highlight-2024-font: var(--ee-status-color-dark-grey);
+
+    /* FONT COLORS */
+
+    --ee-font-color-hue: 207;
+    --ee-font-color-sat: 5;
+    --ee-font-color-lit: 30;
+    --ee-font-color-alpha: 1;
+
+
+    --ee-font-color: hsla(207, 5%, 30%, 1);
+    --ee-font-color-light: hsla(207, 5%, 45%, 1);
+    --ee-font-color-dark: hsla(207, 5%, 15%, 1);
+
+    /* PRIMARY BUTTON COLORS */
+    --ee-btn-primary-hue: 207;
+    --ee-btn-primary-sat: 65;
+    --ee-btn-primary-lit: 45;
+    --ee-btn-primary-alpha: 1;
+
+    /*--ee-btn-primary: hsla(207, 65%, 45%, 1);*/
+    --ee-btn-primary: hsla(207, 65%, 45%, 1);
+    --ee-btn-primary-low-constrast: hsla(207, 70%, 55%, 1);
+    --ee-btn-primary-high-constrast: hsla(207, 80%, 35%, 1);
+    --ee-btn-primary-disabled: hsla(207, 35%, 60%, 1);
+    --ee-btn-primary-hover: var(--ee-btn-primary-low-constrast);
+    --ee-btn-primary-focus: var(--ee-btn-primary-high-constrast);
+
+
+    /* PRIMARY ALT  */
+
+    --ee-btn-primary-alt-hue: 140;
+    --ee-btn-primary-alt-sat: 70;
+    --ee-btn-primary-alt-lit: 35;
+    --ee-btn-primary-alt-alpha: 1;
+
+    /*--ee-btn-primary-alt: hsla(140, 70%, 35%, 1);*/
+    --ee-btn-primary-alt: hsla(140, 70%, 35%, 1);
+    --ee-btn-primary-alt-low-constrast: hsla(140, 75%, 37.5%, 1);
+    --ee-btn-primary-alt-high-constrast: hsla(140, 90%, 25%, 1);
+    --ee-btn-primary-alt-hover: var(--ee-btn-primary-alt-low-constrast);
+    --ee-btn-primary-alt-focus: var(--ee-btn-primary-alt-high-constrast);
+
+    /* SECONDARY BUTTON COLORS */
+    --ee-btn-secondary-hue: 203;
+    --ee-btn-secondary-sat: 2;
+    --ee-btn-secondary-lit: 90;
+    --ee-btn-secondary-alpha: 1;
+
+    /*--ee-btn-secondary: hsla(203, 2%, 90%, 1); */
+    --ee-btn-secondary: hsla(203, 2%, 90%, 1);
+    --ee-btn-secondary-hover: hsla(203, 2%, 70%, 1);
+    --ee-btn-secondary-focus: hsla(203, 2%, 50%, 1);
+
+    /* CAUTION */
+
+    --ee-btn-caution-hue: 340;
+    --ee-btn-caution-sat: 80;
+    --ee-btn-caution-lit: 50;
+    --ee-btn-caution-alpha: 1;
+
+    /*--ee-btn-caution: hsla(340, 55%, 50%, 1);*/
+    --ee-btn-caution: hsla(340, 55%, 50%, 1);
+    --ee-btn-caution-hover: hsla(340, 75%, 50%, 1);
+    --ee-btn-caution-focus: hsla(340, 55%, 35%, 1);
+
+    /* ACCENT */
+
+    --ee-btn-accent-hue: 140;
+    --ee-btn-accent-sat: 70;
+    --ee-btn-accent-lit: 35;
+    --ee-btn-accent-alpha: 1;
+
+    --ee-btn-accent: hsl(187, 57%, 53%, 1);
+    --ee-btn-accent-hover: hsla(187, 77%, 58%, 1);
+    --ee-btn-accent-focus: hsla(187, 57%, 38%, 1);
+
+
+
+    --ee-admin-bg-color: var(--ee-color-white);
+
+    --ee-link-color: hsl(207 70% 50%);
+    --ee-link-color-hover: hsl(207 90% 60%);
+    --ee-link-color-focus: hsl(207 90% 40%);
+
+    --ee-box-shadow: 0 2px 3px -2px hsla(0, 0%, 0%, .5);
+    --ee-box-shadow-big: 0 3px 6px hsla(0, 0%, 0%, .5);
+    --ee-button-box-shadow: 0 1px 1px hsla(0, 0%, 0%, 0.4), 1px 1px 3px hsla(0, 0%, 0%, 0.15), -1px -1px 1px hsla(0, 0%, 100%, 0.75);
+    --ee-button-box-shadow-alt: 0 0 2px hsla(0, 0%, 0%, 0.35), -1px -1px 2px hsla(0, 0%, 100%, 0.75);
+
+    --ee-border-color: hsla(var(--ee-btn-secondary-hue), 2%, 70%, 1);
+    --ee-border-color-disabled: hsla(var(--ee-btn-secondary-hue), 2%, 85%, 1);
+    --ee-border-color-table-row: hsla(var(--ee-btn-secondary-hue), 0%, 90%, 1);
+    --ee-table-row-stripe-bg: var(--ee-color-may-as-well-be-white);
+
+    --ee-admin-sidebar-width: 100%;
+
+    --ee-attention-bg-color: hsl(51, 68%, 76%);
+    --ee-attention-color: hsla(46, 24%, 9%, .85);
+
+    --ee-help-attention: hsl(203, 50%, 70%);
+    --ee-help-attention-hover: hsl(203, 70%, 50%);
+
+    --ee-tab-border: hsl(203, 10%, 75%);
+    --ee-tab-border-hover: hsl(203, 40%, 65%);
+    --ee-tab-border-active: hsl(203, 70%, 55%);
+}
+
+@media screen and (min-width: 960px) {
+    .wp-admin {
+        --ee-admin-sidebar-width: 320px;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .wp-admin {
+        --ee-admin-sidebar-width: 480px;
+    }
+}
+
+.tiny-text {
+    font-size: var(--ee-font-size-micro) !important;
+    line-height: var(--ee-font-size-smaller) !important;
+    letter-spacing: 1px !important;
+}
+
+.smaller-text {
+    font-size: var(--ee-font-size-tiny) !important;
+    line-height: var(--ee-font-size-small) !important;
+    letter-spacing: .05rem !important;
+}
+
+.small-text {
+    font-size: var(--ee-font-size-small) !important;
+    line-height: var(--ee-font-size-big) !important;
+    letter-spacing: .03125rem !important;
+}
+
+.big-text {
+    font-size: var(--ee-font-size-big) !important;
+    line-height: var(--ee-font-size-xl) !important;
+    letter-spacing: -.5px !important;
+}
+
+.bigger-text {
+    font-size: var(--ee-font-size-xl) !important;
+    line-height: var(--ee-font-size-3xl) !important;
+    letter-spacing: -.75px !important;
+}
+
+.huge-text {
+    font-size: var(--ee-font-size-3xl) !important;
+    line-height: var(--ee-font-size-4xl) !important;
+    letter-spacing: -1px !important;
+}
+.extreme-text {
+    color: var(--ee-font-color-light) !important;
+    font-size: var(--ee-font-size-4xl) !important;
+    line-height: var(--ee-font-size-4xl) !important;
+    letter-spacing: -2px !important;
+}
+
+
+/******************* DASHICONS ****************** */
+
+@font-face {
+    font-family: "ee-dashicons";
+    src: url("../../templates/global_assets/fonts/ee-dashicons.eot");
+    src: url("../../templates/global_assets/fonts/ee-dashicons.eot?#iefix") format("embedded-opentype"),
+    url("../../templates/global_assets/fonts/ee-dashicons.ttf") format("truetype"),
+    url("../../templates/global_assets/fonts/ee-dashicons.woff") format("woff"),
+    url("../../templates/global_assets/fonts/ee-dashicons.svg#ee-dashicons") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* .dashicons, */
+.ee-dashicons,
+.ee-icon:before {
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    /* Better Font Rendering =========== */
+    display: inline-block;
+    font-family: "ee-dashicons" !important; /** using important b/c wp has dashicons setup with important for wp-menu-image and I had to override **/
+    font-size: inherit;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    height: auto;
+    line-height: 1;
+    margin-right: calc(.5 * var(--ee-base-ui-scale));
+    position: relative;
+    speak: none;
+    text-align: center;
+    text-decoration: inherit;
+    text-transform: none;
+    top: -2px;
+    vertical-align: middle;
+    width: auto;
+}
+
+
+.espresso-admin.wp-core-ui .button .ee-icon:before {
+    top: 0;
+}
+
+
+.ee-icon-venue:before {
+    /*content: "\e600";*/
+    content: "\79";
+}
+
+.ee-icon-user-edit:before {
+    /*content: "\e601";*/
+    content: "\62";
+}
+
+.ee-icon-user-delete:before {
+    /*content: "\e602";*/
+    content: "\64";
+}
+
+.ee-icon-user-add-new:before {
+    /*content: "\e603";*/
+    content: "\65";
+}
+
+.ee-icon-tickets:before {
+    /*content: "\e604";*/
+    content: "\66";
+}
+
+.ee-icon-tickets-download:before {
+    /*content: "\e605";*/
+    content: "\67";
+}
+
+.ee-icon-pdf-file-type:before,
+.ee-icon-PDF-file-type:before {
+    /*content: "\e606";*/
+    content: "\68";
+}
+
+.ee-icon-payment-reminder:before {
+    /*content: "\e607";*/
+    content: "\69";
+}
+
+.ee-icon-external-link:before {
+    /*content: "\e608";*/
+    content: "\6a";
+}
+
+.ee-icon-event:before {
+    /*content: "\e609";*/
+    content: "\6b";
+}
+
+.ee-icon-event-list-grid:before {
+    /*content: "\e60a";*/
+    content: "\6c";
+}
+
+.ee-icon-event-list-dates:before {
+    /*content: "\e60b";*/
+    content: "\6d";
+}
+
+.ee-icon-email:before {
+    /*content: "\e60c";*/
+    content: "\6e";
+}
+
+.ee-icon-email-send:before {
+    /*content: "\e60d";*/
+    content: "\63";
+}
+
+.ee-icon-ee-cup:before {
+    content: "\e60e";
+    /*content: "\61";*/
+}
+
+.ee-icon-clone:before {
+    /*content: "\e610";*/
+    content: "\77";
+}
+
+.ee-icon-clock:before {
+    /*content: "\e611";*/
+    content: "\78";
+}
+
+.ee-icon-arrow-move:before {
+    /*content: "\e612";*/
+    content: "\76";
+}
+
+.ee-icon-check-out:before {
+    /*content: "\e613";*/
+    content: "\75";
+}
+
+.ee-icon-check-in:before {
+    /*content: "\e614";*/
+    content: "\74";
+}
+
+.checkedin-status-2:before {
+    font-family: "dashicons" !important;
+    /* ! **using important b / c wp has dashicons setup with important and I had to override **!*/
+    content: "\f158";
+}
+
+.ee-icon-cash:before {
+    /*content: "\e615";*/
+    content: "\73";
+}
+
+.ee-icon-cash-remove:before {
+    /*content: "\e616";*/
+    content: "\72";
+}
+
+.ee-icon-cash-edit:before {
+    /*content: "\e617";*/
+    content: "\71";
+}
+
+.ee-icon-cash-add:before {
+    /*content: "\e618";*/
+    content: "\70";
+}
+
+.ee-icon-calendar-edit:before {
+    /*content: "\e619";*/
+    content: "\6f";
+}
+
+
+.pink-icon:before, .pink, .pink a {
+    color: var(--ee-status-color-pink);
+}
+
+.green-icon:before, .green, .green a {
+    color: var(--ee-status-color-green);
+}
+
+.drk-green-icon:before, .drk-green, .drk-green a {
+    color: var(--ee-status-color-dark-green);
+}
+
+.red-icon:before, .red, .red a {
+    color: var(--ee-status-color-red);
+}
+
+.orange-icon:before, .orange, .orange a {
+    color: var(--ee-status-color-orange);
+}
+
+.lt-blue-icon:before, .lt-blue, .lt-blue a {
+    color: var(--ee-status-color-light-blue);
+}
+
+.blue-icon:before, .blue, .blue a {
+    color: var(--ee-status-color-blue);
+}
+
+.yellow-icon:before, .yellow, .yellow a {
+    color: var(--ee-status-color-yellow);
+}
+
+.lt-grey-icon:before, .lt-grey, .lt-grey a {
+    color: var(--ee-status-color-light-grey);
+}
+
+.grey-icon:before, .grey, .grey a {
+    color: var(--ee-status-color-grey);
+}
+
+.drk-grey-icon:before, .drk-grey, .drk-grey a {
+    color: var(--ee-status-color-dark-grey);
+}
+
+.black-icon:before, .black, .black a {
+    color: var(--ee-status-color-charcoal);
+}
+
+.white-icon:before, .white, .white a {
+    color: var(--ee-color-white);
+}
+
+/** corresponding background colors **/
+.pink-bg, .reg-status-bg-RDC, .txn-status-bg-TFL, .pymt-status-bg-PDC {
+    background-color: var(--ee-status-color-pink);
+}
+
+.green-bg, .reg-status-bg-RAP, .txn-status-bg-TCM, .pymt-status-bg-PAP {
+    background-color: var(--ee-status-color-green);
+}
+
+.drk-green-bg {
+    background-color: var(--ee-status-color-dark-green);
+}
+
+.red-bg {
+    background-color: var(--ee-status-color-red);
+}
+
+.orange-bg, .reg-status-bg-RNA, .txn-status-bg-TOP, .pymt-status-bg-PFL {
+    background-color: var(--ee-status-color-orange);
+}
+
+.lt-blue-bg, .reg-status-bg-RPP, .txn-status-bg-TIN, .pymt-status-bg-PPN {
+    background-color: var(--ee-status-color-light-blue);
+}
+
+.blue-bg {
+    background-color: var(--ee-status-color-blue);
+}
+
+.yellow-bg {
+    background-color: var(--ee-status-color-yellow);
+}
+
+.lt-grey-bg, .reg-status-bg-RCN, .pymt-status-bg-PCN {
+    background-color: var(--ee-status-color-light-grey);
+}
+
+.grey-bg {
+    background-color: var(--ee-status-color-grey);
+}
+
+.drk-grey-bg {
+    background-color: var(--ee-status-color-dark-grey);
+}
+
+.black-bg {
+    background-color: var(--ee-status-color-charcoal);
+}
+
+
+/** icon adjustments **/
+.ee-icon-color-grey:before {
+    color: var(--ee-status-color-grey);
+}
+
+.ee-icon-color-ee-grey:before {
+    color: var(--ee-status-color-grey);
+}
+
+.ee-icon-color-ee-orange:before {
+    color: var(--ee-status-color-orange);
+}
+
+.ee-icon-color-ee-blue:before {
+    color: var(--ee-status-color-blue);
+}
+
+.ee-icon-color-ee-green:before {
+    color: var(--ee-status-color-green);
+}
+
+.ee-icon-color-ee-red:before {
+    color: var(--ee-status-color-red);
+}
+
+.ee-icon-color-ee-purple:before {
+    color: var(--ee-status-color-purple);
+}
+
+.ee-icon-size-8 {
+    height: var(--ee-font-size-nano);
+    width: var(--ee-font-size-nano);
+}
+.ee-icon-size-8:before {
+    font-size: var(--ee-font-size-nano) !important;
+}
+
+.ee-icon-size-12 {
+    height: var(--ee-font-size-tiny);
+    width: var(--ee-font-size-tiny);
+}
+.ee-icon-size-12:before {
+    font-size: var(--ee-font-size-tiny) !important;
+}
+
+.ee-icon-size-14 {
+    height: var(--ee-font-size-small);
+    width: var(--ee-font-size-small);
+}
+.ee-icon-size-14:before {
+    font-size: var(--ee-font-size-small) !important;
+}
+
+.ee-icon-size-16 {
+    height: var(--ee-font-size-default);
+    width: var(--ee-font-size-default);
+}
+.ee-icon-size-16:before {
+    font-size: var(--ee-font-size-default) !important;
+    margin-right: -.002em;
+}
+
+.ee-icon-size-18 {
+    height: var(--ee-font-size-big);
+    width: var(--ee-font-size-big);
+}
+.ee-icon-size-18:before {
+    font-size: var(--ee-font-size-big) !important;
+    margin-right: -0.05em;
+}
+
+.ee-icon-size-20 {
+    height: var(--ee-font-size-bigger);
+    width: var(--ee-font-size-bigger);
+}
+.ee-icon-size-20:before {
+    font-size: var(--ee-font-size-bigger) !important;
+    margin-right: -0.1em;
+}
+
+.ee-icon-size-22 {
+    height: var(--ee-font-size-xl);
+    width: var(--ee-font-size-xl);
+}
+.ee-icon-size-22:before {
+    font-size: var(--ee-font-size-xl) !important;
+    margin-right: -0.15em;
+}
+
+.ee-icon-size-24 {
+    height: var(--ee-font-size-2xl);
+    width: var(--ee-font-size-2xl);
+}
+.ee-icon-size-24:before {
+    font-size: var(--ee-font-size-2xl) !important;
+    margin-right: -0.2em;
+}
+
+.ee-icon-size-30 {
+    height: var(--ee-font-size-4xl);
+    width: var(--ee-font-size-4xl);
+}
+.ee-icon-size-30:before {
+    font-size: var(--ee-font-size-4xl) !important;
+    margin-right: -0.2em;
+}
+
+.ee-lock-icon:before, .ee-collapsible:before {
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    font: normal var(--ee-font-size-default)/1 "dashicons";
+    vertical-align: top;
+    margin-top: 3px;
+}
+
+.ee-lock-icon:before {
+    content: "\f160";
+}
+
+
+/** persistent admin (nag) notices **/
+
+.wp-core-ui .espresso-notices.notice,
+.wp-core-ui .espresso-notices.error,
+.wp-core-ui .espresso-notices.updated {
+    display: block;
+    padding: calc(.5 * var(--ee-base-ui-scale)) var(--ee-base-ui-scale);
+}
+
+.wp-core-ui .espresso-notices.notice p,
+.wp-core-ui .espresso-notices.error p,
+.wp-core-ui .espresso-notices.updated p {
+    font-size: var(--ee-font-size-big);
+    margin: 0;
+    padding: 0;
+    margin-inline-end: auto;
+    max-width: 150ch;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: row-reverse;
+    margin-inline-end: 1rem;
+    padding-block: var(--ee-padding-default);
+    padding-inline: var(--ee-padding-big);
+    position: relative;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .button.dismiss-ee-nag-notice-btn {
+    align-items: center;
+    background: transparent;
+    border-color: transparent;
+    display: flex;
+    float: right;
+    inset-block-start: calc(var(--ee-margin-small) * -1);
+    inset-inline-end: calc(var(--ee-margin-default) * -1);
+    position: relative;
+    z-index: 1000;
+}
+
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice .button.dismiss-ee-nag-notice-btn {
+    color: var(--ee-status-color-blue-high-contrast);
+}
+
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice .button.dismiss-ee-nag-notice-btn:hover {
+    color: var(--ee-status-color-blue);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .button.dismiss-ee-nag-notice-btn .dashicons {
+    margin-inline-end: var(--ee-margin-nano);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body {
+    display: flex;
+    flex-flow: column wrap;
+    font-size: var(--ee-font-size-big);
+    position: relative;
+    width: 100%;
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body h3 {
+    line-height: 1.25;
+    margin: var(--ee-margin-micro) 0 var(--ee-margin-nano);
+    font-size: var(--ee-font-size-3xl);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-status-bg--attention .ee-nag-notice__body h3 {
+    font-size: var(--ee-font-size-4xl);
+    margin-block-start: var(--ee-margin-nano);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-status-bg--warning .ee-nag-notice__body h3 {
+    color: var(--ee-status-color-dark-grey);
+    font-size: var(--ee-font-size-5xl);
+    margin-block-start: var(--ee-margin-pico);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-status-bg--error .ee-nag-notice__body h3 {
+    color: var(--ee-color-white);
+    font-size: var(--ee-font-size-6xl);
+    margin-block-start: 0;
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body h4 {
+    margin: var(--ee-margin-big) 0 var(--ee-margin-nano);
+    font-size: var(--ee-font-size-lg);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body h5 {
+    margin: var(--ee-margin-default) 0 var(--ee-margin-nano);
+    font-size: var(--ee-font-size-big);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body p {
+    margin-block-end: var(--ee-margin-smaller);
+
+    &:last-child {
+        margin-block-end: 0;
+    }
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body p strong {
+    font-weight: 900;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__message {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.5;
+    position: relative;
+    width: 100%;
+    z-index: 10;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__message br {
+    padding-block: .25rem;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons {
+    display: flex;
+    height: var(--ee-font-size-5xl);
+    justify-content: center;
+    width: 100%;
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons-info {
+    color: var(--ee-status-color-blue) !important;
+}
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons {
+    font-size: var(--ee-font-size-xl);
+    height: var(--ee-font-size-xl);
+    width: var(--ee-font-size-xl);
+}
+
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-error {
+    border-inline-start-color: var(--ee-status-color-red);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-error .ee-nag-notice__icons .dashicons {
+    color: var(--ee-status-color-red);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-info {
+    border-inline-start-color: var(--ee-status-color-blue-high-contrast);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-info .ee-nag-notice__icons .dashicons {
+    color: var(--ee-status-color-blue-high-contrast);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-success {
+    border-inline-start-color: var(--ee-status-color-green-high-contrast);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-success .ee-nag-notice__icons .dashicons {
+    color: var(--ee-status-color-green-high-contrast);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-warning {
+    border-inline-start-color: var(--ee-status-color-gold);
+}
+.wp-core-ui:not(.espresso-admin) .espresso-notices.ee-nag-notice.notice.notice-warning .ee-nag-notice__icons .dashicons {
+    color: var(--ee-status-color-gold);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--small,
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--small:before {
+    font-size: var(--ee-font-size-bigger);
+    height: var(--ee-font-size-bigger);
+    width: var(--ee-font-size-bigger);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--big,
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--big:before {
+    font-size: var(--ee-font-size-3xl);
+    height: var(--ee-font-size-3xl);
+    width: var(--ee-font-size-3xl);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--bigger,
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--bigger:before {
+    font-size: var(--ee-font-size-5xl);
+    height: var(--ee-font-size-5xl);
+    width: var(--ee-font-size-5xl);
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--huge,
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons .dashicons.dashicons--huge:before {
+    font-size: var(--ee-font-size-9xl);
+    height: var(--ee-font-size-9xl);
+    width: var(--ee-font-size-9xl);
+}
+
+@media screen and (min-width: 480px) {
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body {
+        flex-flow: row nowrap;
+    }
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons {
+        height: 100%;
+        margin-inline-end: var(--ee-margin-default);
+        width: var(--ee-font-size-lg);
+    }
+
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons:has(.dashicons--small) {
+        width: var(--ee-font-size-default);
+    }
+
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons:has(.dashicons--big) {
+        width: var(--ee-font-size-3xl);
+    }
+
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons:has(.dashicons--bigger) {
+        width: var(--ee-font-size-5xl);
+    }
+
+    .wp-core-ui .espresso-notices.ee-nag-notice .ee-nag-notice__body .ee-nag-notice__icons:has(.dashicons--huge) {
+        width: var(--ee-font-size-9xl);
+    }
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-service-change .dashicons.dashicons-bank,
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-service-change .dashicons.dashicons-bank:before {
+    align-items: center;
+    display: inline-flex;
+    font-size: calc(var(--ee-font-size-9xl) * 3.5);
+    height: calc(var(--ee-font-size-9xl) * 3.5);
+    width: calc(var(--ee-font-size-9xl) * 3.5);
+}
+.wp-core-ui .espresso-notices.ee-nag-notice.ee-service-change .dashicons.dashicons-bank {
+    opacity: .0625;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    z-index: 0;
+}
+
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-icon-ee-cup-thick,
+.wp-core-ui .espresso-notices.ee-nag-notice .ee-icon-ee-cup-thick:before {
+    content: "\e60e";
+    font-size: var(--ee-font-size-4xl) !important;
+    height: var(--ee-font-size-4xl);
+    width: var(--ee-font-size-4xl);
+}

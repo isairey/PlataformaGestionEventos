@@ -1,0 +1,79 @@
+.ee-text-links .messenger-active {
+	background-color: var(--ee-status-color-green);
+	border-color: var(--ee-status-color-green);
+    color:  var(--ee-color-white);
+}
+
+#active-message-types, #inactive-message-types {
+    min-height: 10em;
+    margin: 0 0.4em, 0.4em, 0;
+    padding: 8px;
+    margin-top: 10px;
+    border: 1px solid #eee;
+}
+
+#active-message-types.custom-state-active, #inactive-message-types.ui-state-highlight {
+    background: #f8f8f8;
+    border: 1px dashed #b2b2b2;
+   }
+
+
+li.mt-tab {
+    float: left;
+    width: 31%;
+    padding: 0.6em;
+    margin: 0 0.4em 0.4em 0;
+    text-align: left;
+    background: #eee;
+    z-index: 1000;
+}
+
+#inactive-message-types li.mt-tab {
+    width: 100%;
+}
+
+.mt-content, li {
+    cursor: move;
+}
+
+#active-message-types ul, #inactive-message-types ul {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    border: none;
+}
+
+#inactive-message-types ul {
+    width: 90%;
+}
+
+li.mt-tab h4 { margin: 0 0 0.4em; cursor: move; }
+
+.ui-helper-clearfix {
+    clear: both;
+}
+
+li.mt-tab .mt-handlediv {
+    float: right;
+    height: 15px;
+    width: 15px;
+}
+
+li.mt-tab:hover .mt-handlediv {
+    background: transparent url(../../../../../../wp-admin/images/arrows.png) no-repeat top right;
+    cursor: pointer;
+}
+
+.messenger-settings-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.mt-settings-form {
+    margin-inline: 1rem;
+}
+
+.activate_messages_on_off_toggle_container {
+    margin-inline-start: auto;
+}

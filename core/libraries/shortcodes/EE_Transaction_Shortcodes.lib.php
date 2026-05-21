@@ -1,0 +1,916 @@
+<?php
+
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+use EventEspresso\core\exceptions\InvalidInterfaceException;
+
+/**
+ * EE_Transaction_Shortcodes
+ * This is a child class for the EE_Shortcodes library.
+ * The EE_Transaction_Shortcodes lists all shortcodes related to transaction-specific info.
+ * NOTE: if a method doesn't have any phpdoc commenting the details can be found in the
+ * comments in EE_Shortcodes parent class.
+ *
+ * @package        Event Espresso
+ * @subpackage     libraries/shortcodes/EE_Transaction_Shortcodes.lib.php
+ * @author         Darren Ethier
+ */
+class EE_Transaction_Shortcodes extends EE_Shortcodes
+{
+    /**
+     * @var EE_Payment_Method|null $_invoice_pm the invoice payment method for use in invoices etc
+     */
+    protected ?EE_Payment_Method $_invoice_pm = null;
+
+
+    protected function _init_props()
+    {
+        $this->label       = esc_html__('Transaction Shortcodes', 'event_espresso');
+        $this->description = esc_html__('All shortcodes specific to transaction related data', 'event_espresso');
+        $this->_shortcodes = [
+            '[TXN_ID]'                          => esc_html__('The transaction id for the purchase.', 'event_espresso'),
+            '[PAYMENT_URL]'                     => esc_html__(
+                'This is a link to make a payment for the event',
+                'event_espresso'
+            ),
+            '[PAYMENT_LINK_IF_NEEDED_*]'        => esc_html__(
+                    'This is a special dynamic shortcode that allows one to insert a payment link conditional on there being amount owing on the transaction. Three params are available on this shortcode:',
+                    'event_espresso'
+                )
+                . '<ul>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%sclass:%s This can be used to indicate css class is given to the containing css element (default is "callout").',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%scustom_text:%s This should be a sprintf format text string (with %%s for where the hyperlink tags go) that is used for the generated link text (The default is "You can %%smake a payment here »%%s.)',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%scontainer_tag:%s Use this to indicate what container tag you want surrounding the payment link (default is "p").',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '</ul>',
+            '[PAYMENT_DUE_DATE_*]'              => esc_html__(
+                    'This is a special dynamic shortcode that allows one to output a payment due date.  It will only result in a date shown if there is money owing.  Three parameters are available on this shortcode:',
+                    'event_espresso'
+                )
+                . '<ul>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%sformat:%s This is used to indicate what format the date is in.  Default is whatever is set as date formats for your website.',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%sdays_until_due:%s This is the number of days form the transaction creation date that the payment is due.  Defaults to 30.',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '<li>'
+                . sprintf(
+                    esc_html__(
+                        '%sprefix_text:%s You can use this to indicate what text will prefix the date string.  Defaults to "Payment in full due by:"',
+                        'event_espresso'
+                    ),
+                    '<strong>',
+                    '</strong>'
+                )
+                . '</li>'
+                . '</ul>',
+            '[INVOICE_LINK]'                    => esc_html__(
+                'This is a full html link to the invoice. Add download=true to link directly to download.',
+                'event_espresso'
+            ),
+            '[INVOICE_URL]'                     => esc_html__(
+                'This is just the url for the invoice. Add download=true to link directly to download.',
+                'event_espresso'
+            ),
+            '[INVOICE_LOGO_URL]'                => esc_html__(
+                'This returns the url for the logo uploaded via the invoice settings page.',
+                'event_espresso'
+            ),
+            '[INVOICE_LOGO]'                    => esc_html__(
+                'This returns the logo uploaded via the invoice settings page wrapped in img_tags and with a "logo screen" classes. The image size is also set in the img tags automatically to match the uploaded logo.',
+                'event_espresso'
+            ),
+            '[INVOICE_PAYEE_NAME]'              => esc_html__(
+                'This will parse to either: the value of the "Company Name" field in the invoice payment method settings; if that is blank, then the value of the Company Name in the "Your Organization Settings", if that is blank then an empty string.',
+                'event_espresso'
+            ),
+            '[INVOICE_PAYEE_ADDRESS]'           => esc_html__(
+                'This will parse to either: the value of the "Company Address" field in the invoice payment method settings; if that is blank, then the value of the Company Address in the "Your Organization Settings", if that is blank then an empty string.',
+                'event_espresso'
+            ),
+            '[INVOICE_PAYMENT_INSTRUCTIONS]'    => esc_html__(
+                'This will parse to the value of the "Payment Instructions" field found on the Invoice payment methods settings page',
+                'event_espresso'
+            ),
+            '[INVOICE_PAYEE_EMAIL]'             => esc_html__(
+                'This will parse to either: the value of the "Company Email" field in the invoice payment method settings; if that is blank, then the value of the Company Email in the "Your Organization Settings", if that is blank then an empty string.',
+                'event_espresso'
+            ),
+            '[INVOICE_PAYEE_TAX_NUMBER_*]'      => sprintf(
+                esc_html__(
+                    'This will parse to either: the value of the "Company Tax Number" field in the invoice payment method settings; if that is blank, then the value of the Company Tax Number in the "Your Organization Settings", if that is blank then an empty string. Note this is also a special dynamic shortcode. You can use the "prefix" parameter to indicate what text you want to use as a prefix before this tax number.  It defaults to "VAT/Tax Number:". To change this prefix you do the following format for this shortcode: %1$s[INVOICE_PAYEE_TAX_NUMBER_* prefix="GST:"]%2$s and that will output: GST: 12345t56.  If you have no tax number in your settings, then no prefix will be output either.',
+                    'event_espresso'
+                ),
+                '<code>',
+                '</code>'
+            ),
+            '[TOTAL_COST]'                      => esc_html__('The total cost for the transaction', 'event_espresso'),
+            '[TXN_STATUS]'                      => esc_html__(
+                'The transaction status for the transaction.',
+                'event_espresso'
+            ),
+            '[TXN_STATUS_ID]'                   => esc_html__(
+                'The ID representing the transaction status as saved in the db.  This tends to be useful for including with css classes for styling certain statuses differently from others.',
+                'event_espresso'
+            ),
+            '[PAYMENT_STATUS]'                  => esc_html__(
+                'The transaction status for the transaction. This parses to the same value as the [TXN_STATUS] shortcode and still remains here for legacy support.',
+                'event_espresso'
+            ),
+            '[PAYMENT_GATEWAY]'                 => esc_html__(
+                'The payment gateway used for the transaction',
+                'event_espresso'
+            ),
+            '[AMOUNT_PAID]'                     => esc_html__(
+                'The amount paid or refunded.  This will only have a value if there was a payment or refund at the time of generating the message.',
+                'event_espresso'
+            ),
+            '[LAST_AMOUNT_PAID]'                => esc_html__(
+                'This is the last payment or refund made on the transaction related to the message being generated.',
+                'event_espresso'
+            ),
+            '[TOTAL_AMOUNT_PAID]'               => esc_html__(
+                'This parses to the total amount paid over all payments',
+                'event_espresso'
+            ),
+            '[TOTAL_OWING]'                     => esc_html__(
+                'The total owing on a transaction with no attributes.',
+                'event_espresso'
+            ),
+            '[TXN_SUBTOTAL]'                    => esc_html__('The subtotal for all txn line items.', 'event_espresso'),
+            '[TXN_TAX_SUBTOTAL]'                => esc_html__('The subtotal for all tax line items.', 'event_espresso'),
+            '[OWING_STATUS_MESSAGE_*]'          => esc_html__(
+                    'A dynamic shortcode for adjusting how total owing gets shown. The acceptable attributes on the shortcode are:',
+                    'event_espresso'
+                )
+                . '<ul>'
+                . '<li><strong>still_owing</strong>:'
+                . esc_html__(
+                    'If the transaction is not paid in full, then whatever is set for this attribute is shown (otherwise its just the amount owing). The default is:',
+                    'event_espresso'
+                )
+                . sprintf(
+                    esc_html__('%sPlease make a payment.%s', 'event_espresso'),
+                    '<a href="[PAYMENT_URL]" class="noPrint">',
+                    '</a>'
+                )
+                . '</li>'
+                .
+                '<li><strong>none_owing</strong>:'
+                . esc_html__(
+                    'If the transaction is paid in full, then you can indicate how this gets displayed.  Note, that it defaults to just be the total owing.',
+                    'event_espresso'
+                )
+                . '</li></ul>',
+            '[TXN_TOTAL_TICKETS]'               => esc_html__(
+                'The total number of all tickets purchased in a transaction',
+                'event_espresso'
+            ),
+            '[TKT_QTY_PURCHASED]'               => sprintf(
+                esc_html__(
+                    'The total number of all tickets purchased in a transaction. %1$sNOTE: This shortcode is good to use in the "[TICKET_LIST]" field but has been deprecated from all other contexts in favor of the more explicit [TXN_TOTAL_TICKETS] shortcode.%2$s',
+                    'event_espresso'
+                ),
+                '<strong>',
+                '</strong>'
+            ),
+            '[TRANSACTION_ADMIN_URL]'           => esc_html__(
+                'The url to the admin page for this transaction',
+                'event_espresso'
+            ),
+            '[RECEIPT_URL]'                     => esc_html__(
+                'This parses to the generated url for retrieving the receipt for the transaction. Add download=true to link directly to download.',
+                'event_espresso'
+            ),
+            '[INVOICE_RECEIPT_SWITCHER_URL]'    => esc_html__(
+                'This parses to the url that will switch to the receipt if an invoice is displayed, and switch to the invoice if receipt is displayed. If a message type OTHER than invoice or receipt is displayed then this will just return the url for the invoice. If the related message type is not active  then will parse to an empty string.',
+                'event_espresso'
+            ),
+            '[INVOICE_RECEIPT_SWITCHER_BUTTON]' => sprintf(
+                esc_html__(
+                    'The same as %1$s%2$s except this returns the html for a button linked to the invoice or receipt.',
+                    'event_espresso'
+                ),
+                '<code>[INVOICE_RECEIPT_SWITCHER_URL]',
+                '</code>'
+            ),
+            '[LAST_PAYMENT_TRANSACTION_ID]'     => esc_html__(
+                'This will output the value of the payment transaction id for the last payment made on the transaction. Note, if a specific payment was included for message generation, that will be used when parsing the shortcode.',
+                'event_espresso'
+            ),
+            '[PRINT_BUTTON_*]'                  => esc_html__(
+                'This will return html for a Download PDF button which triggers the browser built in print function.',
+                'event_espresso'
+            )
+            . '<ul>'
+            . '<li>'
+            . sprintf(
+                esc_html__(
+                    '%stitle:%s This can be used to set the title value of elemet (default is "Print").',
+                    'event_espresso'
+                ),
+                '<strong>',
+                '</strong>'
+            )
+            . '</li>'
+            . '<li>'
+            . sprintf(
+                esc_html__(
+                    '%salt:%s This can be used to set the alt tag on the element (default uses the title value from above)',
+                    'event_espresso'
+                ),
+                '<strong>',
+                '</strong>'
+            )
+            . '</li>'
+            . '<li>'
+            . sprintf(
+                esc_html__(
+                    '%stext:%s This should be a text string that is used for the generated link text (The default is "Click to print")',
+                    'event_espresso'
+                ),
+                '<strong>',
+                '</strong>'
+            )
+            . '</li>'
+            . '</ul>',
+        ];
+    }
+
+
+    /**
+     * @param string $shortcode the shortcode to be parsed.
+     * @return string parsed shortcode
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    protected function _parser($shortcode)
+    {
+        // attempt to get the transaction.  Since this is potentially used in more fields, we may have to look in the
+        // _extra_data for the transaction.
+        $transaction = $this->_data->txn instanceof EE_Transaction ? $this->_data->txn : null;
+        $transaction = ! $transaction instanceof EE_Transaction
+            && is_array($this->_extra_data)
+            && isset($this->_extra_data['data'])
+            && $this->_extra_data['data'] instanceof EE_Messages_Addressee
+                ? $this->_extra_data['data']->txn
+                : $transaction;
+        if (! $transaction instanceof EE_Transaction) {
+            return '';
+        }
+        // payment
+        $payment = $this->_data->payment instanceof EE_Payment ? $this->_data->payment : null;
+        $payment = ! $payment instanceof EE_Payment
+            && is_array($this->_extra_data)
+            && isset($this->_extra_data['data'])
+            && $this->_extra_data['data'] instanceof EE_Messages_Addressee
+                ? $this->_extra_data['data']->payment
+                : $payment;
+
+        switch ($shortcode) {
+            case '[TXN_ID]':
+                return $transaction->ID();
+
+            case '[PAYMENT_URL]':
+                $payment_url = $transaction->payment_overview_url();
+                return empty($payment_url)
+                    ? esc_html__('http://dummypaymenturlforpreview.com', 'event_espresso')
+                    : $payment_url;
+
+            case strpos($shortcode, '[INVOICE_LINK') !== false :
+                // any attributes?
+                $attrs = $this->_get_shortcode_attrs($shortcode);
+                // downloading PDF or HTML?
+                $messenger = isset($attrs['download']) ? 'pdf' : 'html';
+                $invoice_url = $transaction->invoice_url($messenger);
+                $invoice_url = empty($invoice_url) ? 'http://dummyinvoicelinksforpreview.com' : $invoice_url;
+                return sprintf(
+                    esc_html__('%sClick here for Invoice%s', 'event_espresso'),
+                    '<a href="' . $invoice_url . '">',
+                    '</a>'
+                );
+
+            case strpos($shortcode, '[INVOICE_URL') !== false :
+                // any attributes?
+                $attrs = $this->_get_shortcode_attrs($shortcode);
+                // downloading PDF or HTML?
+                $messenger = isset($attrs['download']) ? 'pdf' : 'html';
+                $invoice_url = $transaction->invoice_url($messenger);
+                return empty($invoice_url) ? 'http://dummyinvoicelinksforpreview.com' : $invoice_url;
+
+            case '[INVOICE_LOGO_URL]':
+                return $this->_get_invoice_logo();
+
+            case '[INVOICE_LOGO]':
+                return $this->_get_invoice_logo(true);
+
+            case '[INVOICE_PAYEE_NAME]':
+                return $this->_get_invoice_payee_name();
+
+            case '[INVOICE_PAYEE_ADDRESS]':
+                return $this->_get_invoice_payee_address();
+
+            case '[INVOICE_PAYMENT_INSTRUCTIONS]':
+                return $this->_get_invoice_payment_instructions();
+
+            case '[INVOICE_PAYEE_EMAIL]':
+                return $this->_get_invoice_payee_email();
+
+            case '[TOTAL_COST]':
+                $total = $transaction->total();
+                return ! empty($total) ? EEH_Template::format_currency($total) : '';
+
+            // note the [payment_status] shortcode is kind of misleading because payment status might be different
+            // from txn status so I'm adding this here for clarity.
+            case '[PAYMENT_STATUS]':
+            case '[TXN_STATUS]':
+                $status = $transaction->pretty_status();
+                return ! empty($status) ? $status : esc_html__('Unknown', 'event_espresso');
+
+            case '[TXN_STATUS_ID]':
+                return $transaction->status_ID();
+
+            case '[PAYMENT_GATEWAY]':
+                return $this->_get_payment_gateway($transaction);
+
+            case '[AMOUNT_PAID]':
+                return $payment instanceof EE_Payment
+                    ? EEH_Template::format_currency($payment->amount())
+                    : EEH_Template::format_currency(0);
+
+            case '[LAST_AMOUNT_PAID]':
+                $last_payment = $transaction->last_payment();
+                return $last_payment instanceof EE_Payment
+                    ? EEH_Template::format_currency($last_payment->amount())
+                    : EEH_Template::format_currency(0);
+
+            case '[TOTAL_AMOUNT_PAID]':
+                return EEH_Template::format_currency($transaction->paid());
+
+            case '[TOTAL_OWING]':
+                $total_owing = $transaction->remaining();
+                return EEH_Template::format_currency($total_owing);
+
+            case '[TXN_SUBTOTAL]':
+                return EEH_Template::format_currency($this->_get_subtotal());
+
+            case '[TXN_TAX_SUBTOTAL]':
+                return EEH_Template::format_currency($this->_get_subtotal(true));
+
+            case '[TKT_QTY_PURCHASED]':
+            case '[TXN_TOTAL_TICKETS]':
+                return $this->_data->total_ticket_count;
+
+            case '[TRANSACTION_ADMIN_URL]':
+                require_once EE_CORE . 'admin/EE_Admin_Page.core.php';
+                $query_args = [
+                    'page'   => 'espresso_transactions',
+                    'action' => 'view_transaction',
+                    'TXN_ID' => $transaction->ID(),
+                ];
+                return EE_Admin_Page::add_query_args_and_nonce($query_args, admin_url('admin.php'));
+
+            case strpos($shortcode, '[RECEIPT_URL') !== false :
+                // get primary_registration
+                $reg = $this->_data->primary_reg_obj;
+                if (! $reg instanceof EE_Registration) {
+                    return '';
+                }
+                // any attributes?
+                $attrs = $this->_get_shortcode_attrs($shortcode);
+                // downloading PDF or HTML?
+                $messenger = isset($attrs['download']) ? 'pdf' : 'html';
+                return $reg->receipt_url($messenger);
+
+            case '[INVOICE_RECEIPT_SWITCHER_URL]':
+                return $this->_get_invoice_receipt_switcher(false);
+
+            case '[INVOICE_RECEIPT_SWITCHER_BUTTON]':
+                return $this->_get_invoice_receipt_switcher();
+
+            case '[LAST_PAYMENT_TRANSACTION_ID]':
+                $id      = '';
+                $payment = $payment instanceof EE_Payment && $payment->ID() !== 0
+                    ? $payment
+                    : $transaction->last_payment();
+                if ($payment instanceof EE_Payment) {
+                    $id = $payment->txn_id_chq_nmbr();
+                }
+                return $id;
+        }
+
+
+        if (strpos($shortcode, '[OWING_STATUS_MESSAGE_*') !== false) {
+            return $this->_get_custom_total_owing($shortcode);
+        }
+        if (strpos($shortcode, '[INVOICE_PAYEE_TAX_NUMBER_*') !== false) {
+            return $this->_get_invoice_payee_tax_number($shortcode);
+        }
+        if (strpos($shortcode, '[PAYMENT_LINK_IF_NEEDED_*') !== false) {
+            return $this->_get_payment_link_if_needed($shortcode);
+        }
+        if (strpos($shortcode, '[PAYMENT_DUE_DATE_*') !== false) {
+            return $this->_get_payment_due_date($shortcode, $transaction);
+        }
+        if (strpos($shortcode, '[PRINT_BUTTON_*') !== false) {
+            return $this->getPrintButton($shortcode);
+        }
+        return '';
+    }
+
+
+    /**
+     * parser for the [OWING_STATUS_MESSAGE_*] attribute type shortcode
+     *
+     * @param string $shortcode the incoming shortcode
+     * @return string parsed.
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_custom_total_owing($shortcode)
+    {
+        $valid_shortcodes = ['transaction'];
+        $attrs            = $this->_get_shortcode_attrs($shortcode);
+        // ensure default is set.
+        $addressee   = $this->_data instanceof EE_Messages_Addressee ? $this->_data : null;
+        $total_owing = $addressee instanceof EE_Messages_Addressee && $addressee->txn instanceof EE_Transaction
+            ? $addressee->txn->remaining()
+            : 0;
+        if ($total_owing > 0) {
+            $owing_content = ! empty($attrs['still_owing'])
+                ? $attrs['still_owing']
+                : sprintf(
+                    esc_html__('%sPlease make a payment.%s', 'event_espresso'),
+                    '<a href="[PAYMENT_URL]" class="noPrint">',
+                    '</a>'
+                );
+            $owing_content = $this->_shortcode_helper->parse_message_template(
+                $owing_content,
+                $addressee,
+                $valid_shortcodes,
+                $this->_message_type,
+                $this->_messenger,
+                $this->_message
+            );
+        } else {
+            $owing_content = ! empty($attrs['none_owing']) ? $attrs['none_owing'] : '';
+        }
+        return $owing_content;
+    }
+
+
+    /**
+     * @param EE_Transaction $transaction
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    private function _get_payment_gateway($transaction)
+    {
+        $payment_method = $transaction instanceof EE_Transaction ? $transaction->payment_method() : null;
+        return $payment_method instanceof EE_Payment_Method ? $payment_method->name() : '';
+    }
+
+
+    /**
+     * This retrieves a logo to be used for the invoice from whatever is set on the invoice logo settings page.  If its
+     * not present then the organization logo is used if its found (set on the organization settings page).
+     *
+     * @param bool $img_tags TRUE means to return with the img tag wrappers.  False just returns the url to the image.
+     * @return string url or html
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_invoice_logo(bool $img_tags = false): string
+    {
+        $invoice_logo_url = '';
+        // try to get the invoice payment method's logo for this transaction image first
+        $payment_method = $this->_get_invoice_payment_method();
+        if ($payment_method instanceof EE_Payment_Method) {
+            $invoice_logo_url = $payment_method->get_extra_meta('pdf_logo_image', true);
+        }
+        if (empty($invoice_logo_url)) {
+            $invoice_logo_url = EE_Registry::instance()->CFG->organization->logo_url;
+        }
+        if (empty($invoice_logo_url)) {
+            return '';
+        }
+        if (! $img_tags) {
+            return $invoice_logo_url;
+        }
+        $invoice_logo_url = esc_url_raw($invoice_logo_url);
+        // image tags have been requested.
+        $image_size       = @getimagesize($invoice_logo_url);
+        $image_width_attr = '';
+        // if image is wider than 300px, set the width to 300
+        if ($image_size !== false) {
+            $image_width      = min($image_size[0], 300);
+            $image_width      = esc_attr($image_width);
+            $image_width_attr = " width='$image_width'";
+        }
+        return '<img class="logo screen" src="' . $invoice_logo_url . '"' . $image_width_attr . ' alt="logo" />';
+    }
+
+
+    /**
+     * Used to retrieve the appropriate content for the invoice payee name shortcode
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_invoice_payee_name()
+    {
+        $payment_method = $this->_get_invoice_payment_method();
+        $payee_name = $payment_method instanceof EE_Payment_Method
+            ? $payment_method->get_extra_meta('pdf_payee_name', true)
+            : null;
+        return empty($payee_name) ? EE_Registry::instance()->CFG->organization->get_pretty('name') : $payee_name;
+    }
+
+
+    /**
+     * gets the default invoice payment method, but has a filter so it can be overridden
+     *
+     * @return EE_Payment_Method|null
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     */
+    private function _get_invoice_payment_method()
+    {
+        if (! $this->_invoice_pm instanceof EE_Payment_Method) {
+            $transaction = $this->_data->txn instanceof EE_Transaction ? $this->_data->txn : null;
+            $transaction = ! $transaction instanceof EE_Transaction
+                && is_array($this->_extra_data)
+                && isset($this->_extra_data['data'])
+                && $this->_extra_data['data'] instanceof EE_Messages_Addressee
+                    ? $this->_extra_data['data']->txn
+                    : $transaction;
+            // get the invoice payment method, and remember it for the next call too
+            $this->_invoice_pm = apply_filters(
+                'FHEE__EE_Transaction_Shortcodes__get_payment_method__default',
+                EEM_Payment_Method::instance()->get_one_of_type('Invoice'),
+                $transaction
+            );
+        }
+        return $this->_invoice_pm;
+    }
+
+
+    /**
+     * Used to retrieve the appropriate content for the invoice payee email shortcode
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_invoice_payee_email()
+    {
+        $payment_method = $this->_get_invoice_payment_method();
+        $payee_email    = $payment_method instanceof EE_Payment_Method
+            ? $payment_method->get_extra_meta('pdf_payee_email', true)
+            : null;
+        return empty($payee_email)
+            ? EE_Registry::instance()->CFG->organization->get_pretty('email')
+            : $payee_email;
+    }
+
+
+    /**
+     * Used to retrieve the appropriate content for the invoice payee tax number shortcode
+     *
+     * @param string $shortcode
+     * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_invoice_payee_tax_number($shortcode)
+    {
+        $payee_tax_number = null;
+        $payment_method   = $this->_get_invoice_payment_method();
+        if ($payment_method instanceof EE_Payment_Method) {
+            $payee_tax_number = $payment_method->get_extra_meta('pdf_payee_tax_number', true);
+        }
+        $payee_tax_number = empty($payee_tax_number) ? EE_Registry::instance()->CFG->organization->vat
+            : $payee_tax_number;
+        if (empty($payee_tax_number)) {
+            return '';
+        }
+        // any attributes?
+        $attrs = $this->_get_shortcode_attrs($shortcode);
+        // prefix?
+        $prefix = $attrs['prefix'] ?? esc_html__('VAT/Tax Number: ', 'event_espresso');
+        return $prefix . $payee_tax_number;
+    }
+
+
+    /**
+     * Used to retrieve the appropriate content for the invoice payee address shortcode.
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @since 4.5.0
+     */
+    private function _get_invoice_payee_address()
+    {
+        $payee_address  = null;
+        $payment_method = $this->_get_invoice_payment_method();
+        if ($payment_method instanceof EE_Payment_Method) {
+            $payee_address = $payment_method->get_extra_meta('pdf_payee_address', true);
+        }
+        if (empty($payee_address)) {
+            $organization  = EE_Registry::instance()->CFG->organization;
+            $payee_address = $organization->get_pretty('address_1') . '<br>';
+            $payee_address .= ! empty($organization->address_2)
+                ? $organization->get_pretty('address_2') . '<br>'
+                : '';
+            $payee_address .= $organization->get_pretty('city') . '<br>';
+            // state
+            $state         = EE_Registry::instance()->load_model('State')->get_one_by_ID($organization->STA_ID);
+            $payee_address .= $state instanceof EE_State ? $state->name() : '';
+            // Country
+            $payee_address .= ! empty($organization->CNT_ISO) ? ', ' . $organization->CNT_ISO . '<br>' : '';
+            $payee_address .= ! empty($organization->zip) ? $organization->zip : '';
+        }
+        return $payee_address;
+    }
+
+
+    /**
+     * Used to retrieve the appropriate content for the invoice payment instructions shortcode.
+     *
+     * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
+     * @since 4.5.0
+     */
+    private function _get_invoice_payment_instructions()
+    {
+        $payment_method = $this->_get_invoice_payment_method();
+        return ($payment_method instanceof EE_Payment_Method)
+            ? $payment_method->get_extra_meta('pdf_instructions', true)
+            : '';
+    }
+
+
+    /**
+     * get invoice/receipt switch button or url.
+     *
+     * @param bool $button true (default) returns the html for a button, false just returns the url.
+     * @return string
+     */
+    protected function _get_invoice_receipt_switcher($button = true)
+    {
+        $reg          = $this->_data->primary_reg_obj;
+        $message_type = $this->_extra_data['message_type'] ?? '';
+        if (! $reg instanceof EE_Registration || empty($message_type)) {
+            return '';
+        }
+        $switch_to_invoice = ! $message_type instanceof EE_Invoice_message_type;
+        $switch_to_label   = $switch_to_invoice && ! $message_type instanceof EE_Receipt_message_type
+            ? esc_html__('View Invoice', 'event_espresso')
+            : esc_html__('Switch to Invoice', 'event_espresso');
+        $switch_to_label   =
+            ! $switch_to_invoice ? esc_html__('Switch to Receipt', 'event_espresso') : $switch_to_label;
+        $switch_to_url     = $switch_to_invoice ? $reg->invoice_url() : $reg->receipt_url();
+        if (! $button) {
+            return $switch_to_url;
+        }
+        if (! empty($switch_to_url)) {
+            return '
+	<form method="post" action="' . $switch_to_url . '" >
+		<input class="print_button" type="submit" value="' . $switch_to_label . '" />
+	</form>
+			';
+        }
+        return '';
+    }
+
+
+    /**
+     * This returns a subtotal.
+     *
+     * @param bool $tax if true then return the subtotal for tax otherwise return subtotal.
+     * @return int
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    private function _get_subtotal($tax = false)
+    {
+        $grand_total = $this->_data->grand_total_line_item ?? null;
+        if (! $grand_total instanceof EE_Line_Item) {
+            return 0;
+        }
+        return $tax ? $grand_total->get_total_tax() : $grand_total->get_items_total();
+    }
+
+
+    /**
+     * parser for the [PAYMENT_LINK_IF_NEEDED_*] attribute type shortcode
+     *
+     * @param string $shortcode the incoming shortcode
+     * @return string parsed.
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @since 4.7.0
+     */
+    private function _get_payment_link_if_needed($shortcode)
+    {
+        $valid_shortcodes = ['transaction'];
+        $attrs            = $this->_get_shortcode_attrs($shortcode);
+        // ensure default is set.
+        $addressee   = $this->_data instanceof EE_Messages_Addressee ? $this->_data : null;
+        $total_owing = $addressee instanceof EE_Messages_Addressee && $addressee->txn instanceof EE_Transaction
+            ? $addressee->txn->remaining()
+            : 0;
+        if ($total_owing > 0) {
+            $class         = $attrs['class'] ?? 'callout';
+            $custom_text   =
+                $attrs['custom_text'] ?? 'You can %smake a payment here »%s.';
+            $container_tag = $attrs['container_tag'] ?? 'p';
+            $opening_tag   = ! empty($container_tag) ? '<' . $container_tag : '';
+            $opening_tag   .= ! empty($opening_tag) && ! empty($class) ? ' class="' . $class . '"' : $opening_tag;
+            $opening_tag   .= ! empty($opening_tag) ? '>' : $opening_tag;
+            $closing_tag   = ! empty($container_tag) ? '</' . $container_tag . '>' : '';
+            $content       = $opening_tag . sprintf($custom_text, '<a href="[PAYMENT_URL]">', '</a>') . $closing_tag;
+            // we need to re-run this string through the parser to catch any shortcodes that are in it.
+            $owing_content = $this->_shortcode_helper->parse_message_template(
+                $content,
+                $addressee,
+                $valid_shortcodes,
+                $this->_message_type,
+                $this->_messenger,
+                $this->_message
+            );
+        } else {
+            return '';
+        }
+        return $owing_content;
+    }
+
+
+    /**
+     * Parser for the [PAYMENT_DUE_DATE_*] attribute type shortcode
+     *
+     * @param string         $shortcode The shortcode being parsed.
+     * @param EE_Transaction $transaction
+     * @return string
+     * @throws EE_Error
+     * @throws ReflectionException
+     * @since 4.8.28.rc.011
+     */
+    protected function _get_payment_due_date($shortcode, EE_Transaction $transaction)
+    {
+        // if transaction is paid in full then we can just return an empty string
+        if ($transaction->remaining() == 0) {
+            return '';
+        }
+        $attrs               = $this->_get_shortcode_attrs($shortcode);
+        $format              = $attrs['format'] ?? get_option('date_format');
+        $days_until_due      = isset($attrs['days_until_due']) ? (int) $attrs['days_until_due'] : 30;
+        $prefix_text         = $attrs['prefix_text'] ?? esc_html__('Payment in full due by: ', 'event_espresso');
+        $transaction_created = $transaction->get_DateTime_object('TXN_timestamp');
+        // setup date due:
+        try {
+            if ($transaction_created instanceof DateTime) {
+                $date_due = $transaction_created->add(
+                    new DateInterval('P' . $days_until_due . 'D')
+                )->format($format);
+            } else {
+                throw new Exception();
+            }
+        } catch (Exception $e) {
+            // format was likely invalid.
+            $date_due = esc_html__(
+                'Unable to calculate date due, likely the format string is invalid.',
+                'event_espresso'
+            );
+        }
+        return $prefix_text . $date_due;
+    }
+
+
+    /**
+     * This method output a button to call the browsers own print function using Javascript.
+     *
+     * @since {$VID}
+     *
+     * @param string         $shortcode The shortcode being parsed.
+     * 
+     * @return string        Generated html
+     */
+    private function getPrintButton($shortcode)
+    {
+
+        // check we are parsing the correct shortcode
+        $shortcode = trim(
+            str_replace(
+                ['[PRINT_BUTTON_*', ']'], // find
+                '',  // replace
+                $shortcode
+            )
+        );
+        // make sure the required wp helper function is present
+        // require the shortcode file if necessary
+        if (! function_exists('shortcode_parse_atts')) {
+            require_once(ABSPATH . WPINC . '/shortcodes.php');
+        }
+
+        // get any attributes that may be present and set the defaults.
+        $attrs = shortcode_parse_atts($shortcode);
+
+        $title = ! empty($attrs['title'])
+            ? $attrs['title']
+            : 'Print';
+
+        $alt = ! empty($attrs['alt'])
+            ? $attrs['alt']
+            : $title;
+
+        $text = ! empty($attrs['text'])
+            ? $attrs['text']
+            : esc_html__('Click to print', 'event_espresso');
+
+        // Return the print button
+        return "
+                <a class='ee-print-btn' 
+                   title='{$title}'  
+                   alt='{$alt}'  
+                   onclick='window.print();'  
+                   target='_blank'  
+                   style='cursor:pointer;'
+                > 
+                   {$text}
+                </a>";
+    }
+}

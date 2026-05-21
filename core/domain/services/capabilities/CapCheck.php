@@ -1,0 +1,76 @@
+<?php
+
+namespace EventEspresso\core\domain\services\capabilities;
+
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+
+/**
+ * Class CapCheck
+ * DTO for passing details regarding a required Capabilities Check
+ *
+ * @package       Event Espresso
+ * @author        Brent Christensen
+ * @since         4.9.1
+ */
+class CapCheck implements CapCheckInterface
+{
+    /**
+     * @var string|array $capability
+     */
+    private $capability;
+
+    /**
+     * @var string $context
+     */
+    private $context;
+
+    /**
+     * @var int|string $ID
+     */
+    private $ID;
+
+
+    /**
+     * @param string|array $capability   - the capability to be checked, like: 'ee_edit_registrations',
+     *                                     or an array of capability strings
+     * @param string       $context      - what the user is attempting to do, like: 'Edit Registration'
+     * @param int|string   $ID           - (optional) ID for item where current_user_can is being called from
+     * @throws InvalidDataTypeException
+     */
+    public function __construct($capability, string $context, $ID = 0)
+    {
+        if (! (is_string($capability) || is_array($capability))) {
+            throw new InvalidDataTypeException('$capability', $capability, 'string or array');
+        }
+        $this->capability = $capability;
+        $this->context = strtolower(str_replace(' ', '_', $context));
+        $this->ID = $ID;
+    }
+
+
+    /**
+     * @return string|array
+     */
+    public function capability()
+    {
+        return $this->capability;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function context(): string
+    {
+        return $this->context;
+    }
+
+
+    /**
+     * @return int|string
+     */
+    public function ID()
+    {
+        return $this->ID;
+    }
+}

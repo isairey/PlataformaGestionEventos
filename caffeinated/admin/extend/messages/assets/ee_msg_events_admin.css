@@ -1,0 +1,44 @@
+.espresso-admin .postbox .inside > div.messages-tabs-content {
+    padding: 0.5rem;
+    background: var(--ee-color-almost-white);
+}
+
+#poststuff .messages-tabs-content .ee-nav-tabs .nav-tab-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+#poststuff .messages-tabs-content .ee-nav-tabs .nav-tab-content {
+    background: var(--ee-admin-bg-color);
+    margin: 0;
+    padding-inline-end: 0;
+    padding-inline-start: 0.5rem;
+    padding: 1.25rem 1rem 0.5rem;
+}
+
+.messages-custom-template-switcher {
+    width: 100%;
+}
+
+.messages-custom-template-switcher thead {
+    font-weight: bold;
+}
+
+.messages-custom-template-switcher td:first-child {
+    width: 40%;
+}
+
+.messages-custom-template-switcher td:nth-child(2) {
+    padding-right: 10px;
+    width: 24%;
+}
+
+.messages-custom-template-switcher td:last-child {
+    width: 32%;
+}
+/*.messages-custom-template-switcher td:last-child {*/
+/*    width: 50%;*/
+/*}*/
+.espresso-admin .postbox .inside .messages-custom-template-switcher select {
+    max-width: 100%;
+}

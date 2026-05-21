@@ -1,0 +1,59 @@
+<?php
+
+namespace EventEspresso\core\domain\entities\routing\data_nodes;
+
+use DomainException;
+use EventEspresso\core\domain\Domain;
+use EventEspresso\core\domain\entities\routing\data_nodes\core\Api;
+use EventEspresso\core\domain\entities\routing\data_nodes\core\Config;
+use EventEspresso\core\services\assets\JedLocaleData;
+use EventEspresso\core\services\json\PrimaryJsonDataNode;
+use EventEspresso\core\services\json\JsonDataNodeValidator;
+
+/**
+ * Class EventEspressoData
+ * Description
+ *
+ * @package EventEspresso\core\domain\entities\routing\data_nodes
+ * @author  Brent Christensen
+ * @since   5.0.0.p
+ */
+class EventEspressoData extends PrimaryJsonDataNode
+{
+    const NODE_NAME = 'eventEspressoData';
+
+    private Api $api;
+
+    private Config $config;
+
+    private JedLocaleData $jed_locale;
+
+
+    /**
+     * @param Api $api
+     * @param Config $config
+     * @param JedLocaleData         $jed_locale
+     * @param JsonDataNodeValidator $validator
+     */
+    public function __construct(Api $api, Config $config, JedLocaleData $jed_locale, JsonDataNodeValidator $validator)
+    {
+        parent::__construct($validator);
+        $this->api = $api;
+        $this->config = $config;
+        $this->jed_locale = $jed_locale;
+        $this->setNodeName(EventEspressoData::NODE_NAME);
+    }
+
+
+    /**
+     * @throws DomainException
+     * @since 5.0.0.p
+     */
+    public function initialize()
+    {
+        $this->addDataNode($this->api);
+        $this->addDataNode($this->config);
+        $this->addData('i18n', $this->jed_locale->getData());
+        $this->setInitialized(true);
+    }
+}

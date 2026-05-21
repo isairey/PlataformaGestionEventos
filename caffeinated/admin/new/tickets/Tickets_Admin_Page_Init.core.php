@@ -1,0 +1,62 @@
+<?php
+
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuGroup;
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuItem;
+use EventEspresso\core\domain\entities\admin\menu\AdminMenuTopLevel;
+
+/**
+ * Tickets_Admin_Page_Init class
+ *
+ * This is the init for the EE Tickets Admin Pages.  See EE_Admin_Page_Init for method inline docs.
+ *
+ * @package            Event Espresso
+ * @subpackage         caffeinated/admin/new/tickets/Tickets_Admin_Page_Init.core.php
+ * @author             Darren Ethier
+ */
+class Tickets_Admin_Page_Init extends EE_Admin_Page_Init
+{
+    /**
+     *        constructor
+     *
+     * @Constructor
+     * @access public
+     * @return void
+     */
+    public function __construct()
+    {
+        if (! defined('TICKETS_PG_SLUG')) {
+            define('TICKETS_PG_SLUG', 'tickets');
+            define('TICKETS_LABEL', esc_html__('Default Tickets', 'event_espresso'));
+            define('TICKETS_ADMIN', EE_CORE_CAF_ADMIN . 'new/' . TICKETS_PG_SLUG . '/');
+            define('TICKETS_ADMIN_URL', admin_url('admin.php?page=' . TICKETS_PG_SLUG));
+            define('TICKETS_ASSETS_PATH', TICKETS_ADMIN . 'assets/');
+            define('TICKETS_ASSETS_URL', EE_CORE_CAF_ADMIN_URL . 'new/' . TICKETS_PG_SLUG . '/assets/');
+            define('TICKETS_TEMPLATE_PATH', TICKETS_ADMIN . 'templates/');
+            define('TICKETS_TEMPLATE_URL', EE_CORE_CAF_ADMIN_URL . 'new/' . TICKETS_PG_SLUG . '/templates/');
+        }
+        parent::__construct();
+        $this->_folder_path = EE_CORE_CAF_ADMIN . 'new/' . $this->_folder_name . DS;
+    }
+
+
+    protected function _set_init_properties()
+    {
+        $this->label = TICKETS_LABEL;
+    }
+
+
+    public function getMenuProperties(): array
+    {
+        return [
+            'menu_type'       => AdminMenuItem::TYPE_MENU_SUB_ITEM,
+            'menu_group'      => AdminMenuGroup::MENU_SLUG_MANAGEMENT,
+            'menu_order'      => 15,
+            'show_on_menu'    => AdminMenuItem::DISPLAY_NONE,
+            'parent_slug'     => AdminMenuTopLevel::MENU_PARENT_ACTIVE,
+            'menu_slug'       => TICKETS_PG_SLUG,
+            'menu_label'      => TICKETS_LABEL,
+            'capability'      => 'manage_options',
+            'admin_init_page' => $this,
+        ];
+    }
+}

@@ -1,0 +1,616 @@
+<?php
+
+/**
+ * EE_Messages_Validator class
+ * This class is the parent class for handling validation of message template fields.
+ * Children classes follow a certain naming format
+ * (i.e. /email/EE_Messages_Email_Payment_Validator.class.php)
+ * and they simply serve the function of defining any special validation rules
+ * for the context->field for that messenger/message_type combination when templates are edited.
+ *
+ * @abstract
+ * @package        Event Espresso
+ * @subpackage     includes/core/messages/validators/EE_Messages_Validator.core.php
+ * @author         Darren Ethier
+ */
+abstract class EE_Messages_Validator extends EE_Base
+{
+    /**
+     * These properties just hold the name for the Messenger and Message Type (defined by child classes).
+     * These are used for retrieving objects etc.
+     *
+     * @var string
+     */
+    protected string $_m_name = '';
+
+    protected string $_mt_name = '';
+
+
+    /**
+     * This will hold any error messages from the validation process.
+     * The _errors property holds an associative array of error messages
+     * listing the field as the key and the message as the value.
+     *
+     * @var array
+     */
+    private array $_errors = [];
+
+
+    /**
+     * holds an array of fields being validated
+     *
+     * @var array
+     */
+    protected array $_fields = [];
+
+
+    /**
+     * this will hold the incoming context
+     *
+     * @var string
+     */
+    protected string $_context = '';
+
+
+    /**
+     * this holds an array of fields and the relevant validation information
+     * that the incoming fields data get validated against.
+     * This gets setup in the _set_props() method.
+     *
+     * @var array
+     */
+    protected array $_validators = [];
+
+    protected EE_messenger $_messenger;
+
+
+    protected EE_message_type $_message_type;
+
+
+    /**
+     * will hold any valid_shortcode modifications made by the _modify_validator() method.
+     *
+     * @var array
+     */
+    protected array $_valid_shortcodes_modifier = [];
+
+
+    /**
+     * There may be times when a message type wants to include a shortcode group but exclude specific
+     * shortcodes.  If that's the case then it can set this property as an array of shortcodes to exclude and
+     * they will not be allowed.
+     * Array should be indexed by field and values are an array of specific shortcodes to exclude.
+     *
+     * @var array
+     */
+    protected array $_specific_shortcode_excludes = [];
+
+
+    /**
+     * Runs the validator using the incoming fields array as the fields/values to check.
+     *
+     * @param array  $fields The fields sent by the EEM object.
+     * @param string $context
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public function __construct($fields, $context)
+    {
+        // checks that child class has set _m_name and _mt_name, otherwise we get out.
+        if (empty($this->_m_name) || empty($this->_mt_name)) {
+            throw new EE_Error(
+                esc_html__(
+                    'EE_Messages_Validator child classes MUST set the $_m_name and $_mt_name property.  Check that the child class is doing this',
+                    'event_espresso'
+                )
+            );
+        }
+        $this->_fields  = (array) $fields;
+        $this->_context = (string) $context;
+
+        $this->loadMessengerAndMessageType();
+        // modify any messenger/message_type specific validation instructions.  This is what child classes define.
+        $this->_modify_validator();
+        // let's set validators property
+        $this->setValidators();
+    }
+
+
+    /**
+     * Child classes instantiate this and use it to modify the _validator_config array property
+     * for the messenger using messengers set_validate_config() method.
+     * This is so we can specify specific validation instructions for a messenger/message_type combo
+     * that aren't handled by the defaults setup in the messenger.
+     *
+     * @abstract
+     * @return void
+     */
+    abstract protected function _modify_validator();
+
+
+    /**
+     * loads all objects used by validator
+     *
+     * @throws EE_Error
+     */
+    private function loadMessengerAndMessageType()
+    {
+        // load messenger
+        $messenger = ucwords(str_replace('_', ' ', $this->_m_name));
+        $messenger = str_replace(' ', '_', $messenger);
+        $messenger = 'EE_' . $messenger . '_messenger';
+
+        if (! class_exists($messenger)) {
+            throw new EE_Error(
+                sprintf(
+                    esc_html__('There is no messenger class for the given string (%s)', 'event_espresso'),
+                    $this->_m_name
+                )
+            );
+        }
+
+        $this->_messenger = new $messenger();
+
+        // load message type
+        $message_type = ucwords(str_replace('_', ' ', $this->_mt_name));
+        $message_type = str_replace(' ', '_', $message_type);
+        $message_type = 'EE_' . $message_type . '_message_type';
+
+        if (! class_exists($message_type)) {
+            throw new EE_Error(
+                sprintf(
+                    esc_html__('There is no message type class for the given string (%s)', 'event_espresso'),
+                    $this->_mt_name
+                )
+            );
+        }
+
+        $this->_message_type = new $message_type();
+    }
+
+
+    /**
+     * used to set the $_validators property
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    private function setValidators()
+    {
+        // let's get all valid shortcodes from mt and message type
+        // (messenger will have its set in the _validator_config property for the messenger)
+        $mt_codes = $this->_message_type->get_valid_shortcodes();
+        // get messenger validator_config
+        $msgr_validator = $this->_messenger->get_validator_config();
+        // we only want the valid shortcodes for the given context!
+        $context  = $this->_context;
+        $mt_codes = $mt_codes[ $context ];
+        // in this first loop we're just getting all shortcode group indexes from the msgr_validator
+        // into a single array (so we can get the appropriate shortcode objects for the groups)
+        $shortcode_groups = $mt_codes;
+        $groups_per_field = [];
+
+        foreach ($msgr_validator as $field => $config) {
+            if (! isset($config['shortcodes'])) {
+                continue;
+            }  //Nothing to see here.
+            $groups_per_field[ $field ] = array_intersect($config['shortcodes'], $mt_codes);
+            $shortcode_groups           = array_merge($config['shortcodes'], $shortcode_groups);
+        }
+        $shortcode_groups = array_unique($shortcode_groups);
+
+        // okay now we've got our groups.
+        // Let's get the codes from the objects into an array indexed by group for easy retrieval later.
+        $codes_from_objs = [];
+
+        foreach ($shortcode_groups as $group) {
+            $ref       = ucwords(str_replace('_', ' ', $group));
+            $ref       = str_replace(' ', '_', $ref);
+            $classname = 'EE_' . $ref . '_Shortcodes';
+            if (class_exists($classname)) {
+                $a                         = new ReflectionClass($classname);
+                $obj                       = $a->newInstance();
+                $codes_from_objs[ $group ] = $obj->get_shortcodes();
+            }
+        }
+
+        // let's just replace the $mt shortcode group indexes with the actual shortcodes (unique)
+        $final_mt_codes = [];
+        foreach ($mt_codes as $group) {
+            $final_mt_codes = array_merge($final_mt_codes, $codes_from_objs[ $group ]);
+        }
+        $mt_codes = $final_mt_codes;
+
+        // k now in this next loop we're going to loop through $msgr_validator again
+        // and set up the _validators property from the data we've setup so far.
+        foreach ($msgr_validator as $field => $config) {
+            // if required shortcode is not in our list of codes for the given field, then we skip this field.
+            $required = isset($config['required'])
+                ? array_intersect($config['required'], array_keys($mt_codes))
+                : true;
+            if (empty($required)) {
+                continue;
+            }
+
+            if (isset($this->_valid_shortcodes_modifier[ $context ][ $field ])) {
+                // If we have an override then we use it to indicate the codes we want.
+                $this->_validators[ $field ]['shortcodes'] = $this->reassembleValidShortcodesFromGroup(
+                    $this->_valid_shortcodes_modifier[ $context ][ $field ],
+                    $codes_from_objs
+                );
+            } elseif (isset($groups_per_field[ $field ])) {
+                // we have specific shortcodes for a field so we need to use them
+                $this->_validators[ $field ]['shortcodes'] = $this->reassembleValidShortcodesFromGroup(
+                    $groups_per_field[ $field ],
+                    $codes_from_objs
+                );
+            } elseif (empty($config)) {
+                // no config so we're assuming we're just going to use the shortcodes from the message type context
+                $this->_validators[ $field ]['shortcodes'] = $mt_codes;
+            } elseif (isset($config['specific_shortcodes'])) {
+                // we have specific shortcodes so we need to use them
+                $this->_validators[ $field ]['shortcodes'] = $config['specific_shortcodes'];
+            } else {
+                // otherwise the shortcodes are what is set by the messenger for that field
+                foreach ($config['shortcodes'] as $group) {
+                    $this->_validators[ $field ]['shortcodes'] = isset($this->_validators[ $field ]['shortcodes'])
+                        ? array_merge($this->_validators[ $field ]['shortcodes'], $codes_from_objs[ $group ])
+                        : $codes_from_objs[ $group ];
+                }
+            }
+
+            // now let's just make sure that any excluded specific shortcodes are removed.
+            $specific_excludes = $this->get_specific_shortcode_excludes();
+            if (isset($specific_excludes[ $field ])) {
+                foreach ($specific_excludes[ $field ] as $sex) {
+                    if (isset($this->_validators[ $field ]['shortcodes'][ $sex ])) {
+                        unset($this->_validators[ $field ]['shortcodes'][ $sex ]);
+                    }
+                }
+            }
+
+            // hey! don't forget to include the type if present!
+            $this->_validators[ $field ]['type'] = $config['type'] ?? null;
+        }
+    }
+
+
+    /**
+     * This just returns the validators property that contains information
+     * about the various shortcodes and their availability with each field
+     *
+     * @return array
+     */
+    public function get_validators(): array
+    {
+        return $this->_validators;
+    }
+
+
+    /**
+     * This simply returns the specific shortcode_excludes property that is set.
+     *
+     * @return array
+     * @since 4.5.0
+     */
+    public function get_specific_shortcode_excludes(): array
+    {
+        // specific validator filter
+        $shortcode_excludes = (array) apply_filters(
+            'FHEE__' . get_class($this) . '__get_specific_shortcode_excludes;',
+            $this->_specific_shortcode_excludes,
+            $this->_context
+        );
+        // global filter
+        return (array) apply_filters(
+            'FHEE__EE_Messages_Validator__get_specific_shortcode_excludes',
+            $shortcode_excludes,
+            $this->_context,
+            $this
+        );
+    }
+
+
+    /**
+     * This is the main method that handles validation
+     * What it does is loop through the _fields (the ones that get validated)
+     * and checks them against the shortcodes array for the field and the 'type' indicated by the
+     *
+     * @return array|bool if errors present we return the array otherwise true
+     */
+    public function validate()
+    {
+        // some defaults
+        $template_fields = $this->_messenger->get_template_fields();
+        // loop through the fields and check!
+        foreach ($this->_fields as $field => $value) {
+            $this->_errors[ $field ] = [];
+            $err_msg                 = '';
+            $field_label             = '';
+            // if field is not present in the _validators array then we continue
+            if (! isset($this->_validators[ $field ])) {
+                unset($this->_errors[ $field ]);
+                continue;
+            }
+
+            // get the translated field label!
+            // first check if it's in the main fields list
+            if (isset($template_fields[ $field ])) {
+                // most likely the field is found in the 'extra' array.
+                $field_label = ! empty($template_fields[ $field ])
+                    ? $template_fields[ $field ]['label']
+                    : $field;
+            }
+
+            // if field label is empty OR is equal to the current field
+            // then we need to loop through the 'extra' fields in the template_fields config (if present)
+            if (isset($template_fields['extra']) && (empty($field_label) || $field_label === $field)) {
+                foreach ($template_fields['extra'] as $main_field => $secondary_field) {
+                    foreach ($secondary_field as $name => $values) {
+                        if ($name === $field) {
+                            $field_label = $values['label'];
+                        }
+
+                        // if we've got a 'main' secondary field, let's see if that matches what field we're on
+                        // which means it contains the label for this field.
+                        if ($name === 'main' && $main_field === $field_label) {
+                            $field_label = $values['label'];
+                        }
+                    }
+                }
+            }
+
+            // field is present. Let's validate shortcodes first (but only if shortcodes present).
+            if (
+                isset($this->_validators[ $field ]['shortcodes'])
+                && ! empty($this->_validators[ $field ]['shortcodes'])
+            ) {
+                $valid_shortcodes   = array_keys((array) $this->_validators[ $field ]['shortcodes']);
+                $invalid_shortcodes = $this->findInvalidShortcodes((string) $value, $valid_shortcodes);
+                // if true then that means there is a returned error message
+                // that we'll need to add to the _errors array for this field.
+                if ($invalid_shortcodes) {
+                    $v_s     = array_keys($this->_validators[ $field ]['shortcodes']);
+                    $err_msg = sprintf(
+                        esc_html__(
+                            '%3$sThe following shortcodes were found in the "%1$s" field that ARE not valid: %2$s%4$s',
+                            'event_espresso'
+                        ),
+                        '<strong>' . $field_label . '</strong>',
+                        $invalid_shortcodes,
+                        '<p>',
+                        '</p >'
+                    );
+                    $err_msg .= sprintf(
+                        esc_html__('%2$sValid shortcodes for this field are: %1$s%3$s', 'event_espresso'),
+                        implode(', ', $v_s),
+                        '<strong>',
+                        '</strong>'
+                    );
+                }
+            }
+
+            // if there's a "type" to be validated then let's do that too.
+            if (isset($this->_validators[ $field ]['type']) && ! empty($this->_validators[ $field ]['type'])) {
+                switch ($this->_validators[ $field ]['type']) {
+                    case 'number':
+                        if (! is_numeric($value)) {
+                            $err_msg .= sprintf(
+                                esc_html__(
+                                    '%3$sThe %1$s field is supposed to be a number. The value given (%2$s)  is not.  Please double-check and make sure the field contains a number%4$s',
+                                    'event_espresso'
+                                ),
+                                $field_label,
+                                $value,
+                                '<p>',
+                                '</p >'
+                            );
+                        }
+                        break;
+                    case 'email':
+                        $valid_email = $this->_validate_email((string) $value);
+                        if (! $valid_email) {
+                            $err_msg .= htmlentities(
+                                sprintf(
+                                    esc_html__(
+                                        'The %1$s field has at least one string that is not a valid email address record.  Valid emails are in the format: "Name <email@something.com>" or "email@something.com" and multiple emails can be separated by a comma.',
+                                        'event_espresso'
+                                    ),
+                                    $field_label
+                                )
+                            );
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // if $err_msg isn't empty, let's set up the _errors array for this field.
+            if (! empty($err_msg)) {
+                $this->_errors[ $field ]['msg'] = $err_msg;
+            } else {
+                unset($this->_errors[ $field ]);
+            }
+        }
+
+        // if we have ANY errors, then we want to make sure we return the values
+        // for ALL the fields so the user doesn't have to retype them all.
+        if (! empty($this->_errors)) {
+            foreach ($this->_fields as $field => $value) {
+                $this->_errors[ $field ]['value'] = stripslashes($value);
+            }
+        }
+
+        // return any errors or just TRUE if everything validates
+        return empty($this->_errors)
+            ? true
+            : $this->_errors;
+    }
+
+
+    /**
+     * Reassembles and returns an array of valid shortcodes
+     * given the array of groups and array of shortcodes indexed by group.
+     *
+     * @param array $groups          array of shortcode groups that we want shortcodes for
+     * @param array $codes_from_objs All the codes available.
+     * @return array                   an array of actual shortcodes (that will be used for validation).
+     */
+    private function reassembleValidShortcodesFromGroup(array $groups, array $codes_from_objs): array
+    {
+        $shortcodes = [];
+        foreach ($groups as $group) {
+            $shortcodes = array_merge($shortcodes, $codes_from_objs[ $group ]);
+        }
+        return $shortcodes;
+    }
+
+
+    /**
+     * Validates a string against a list of accepted shortcodes
+     * This function takes in an array of shortcodes
+     * and makes sure that the given string ONLY contains shortcodes in that array.
+     *
+     * @param string $value            string to evaluate
+     * @param array  $valid_shortcodes array of shortcodes that are acceptable.
+     * @return bool|string  return either a list of invalid shortcodes OR false if the shortcodes validate.
+     * @deprecated 5.0.48
+     */
+    protected function _invalid_shortcodes(string $value, array $valid_shortcodes)
+    {
+        return $this->findInvalidShortcodes($value, $valid_shortcodes) ?: false;
+    }
+
+
+    /**
+     * Validates a string against a list of accepted shortcodes
+     * This function takes in an array of shortcodes
+     * and makes sure that the given string ONLY contains shortcodes in that array.
+     *
+     * @param string $incoming_text    string to evaluate
+     * @param array  $valid_shortcodes array of shortcodes that are acceptable.
+     * @return string  return either a list of invalid shortcodes OR false if the shortcodes validate.
+     */
+    protected function findInvalidShortcodes(string $incoming_text, array $valid_shortcodes): string
+    {
+        // first we need to go through the string and get ALL the shortcodes in the string
+        // matches the opening [ plus the shortcode name, but nothing else
+        // examples:
+        //  [RECIPIENT_LNAME] matches as [RECIPIENT_LNAME
+        //  [RECEIPT_URL download=true] matches as [RECEIPT_URL
+        //  [PAYMENT_LINK_IF_NEEDED_* custom_text='pay me now man!'] matches as [PAYMENT_LINK_IF_NEEDED_*
+        preg_match_all(EE_Shortcodes::REGEX_SHORTCODE_NAME_ONLY, $incoming_text, $matches);
+        $shortcodes_in_text = $matches[0];
+        // now all we need to do is add the closing ] to each shortcode to make them "valid"
+        $shortcodes_in_text = array_map('EE_Shortcodes::extractShortcode', $shortcodes_in_text);
+        // get a diff of the shortcodes in the string vs the valid shortcodes
+        $invalid_shortcodes = array_diff($shortcodes_in_text, $valid_shortcodes);
+        if (empty($invalid_shortcodes)) {
+            return '';
+        }
+        // made it here? then let's assemble the error message
+        return '<strong>' . implode('</strong>,<strong>', $invalid_shortcodes) . '</strong>';
+    }
+
+
+    /**
+     * Validates an incoming string and makes sure we have valid emails in the string.
+     *
+     * @param string $value incoming value to validate
+     * @return bool        true if the string validates, false if it doesn't
+     */
+    protected function _validate_email(string $value): bool
+    {
+        $or_val = $value;
+
+        // empty strings will validate because this is how a message template
+        // for a particular context can be "turned off" (if there is no email then no message)
+        if (empty($value)) {
+            return true;
+        }
+
+        // first determine if there ARE any shortcodes.
+        // If there are shortcodes and then later we find that there were no other valid emails
+        // but the field isn't empty...
+        // that means we've got extra commas that were left after stripping out shortcodes so probably still valid.
+        $has_shortcodes = preg_match(EE_Shortcodes::REGEX_SHORTCODE_FULL, $value);
+
+        // first we need to strip out all the shortcodes!
+        $value = preg_replace(EE_Shortcodes::REGEX_SHORTCODE_FULL, '', $value);
+
+        // if original value is not empty and new value is, then we've parsed out a shortcode
+        // and we now have an empty string which DOES validate.
+        // We also validate complete empty field for email because
+        // it's possible that this message is being "turned off" for a particular context
+
+
+        if (! empty($or_val) && empty($value)) {
+            return true;
+        }
+
+        // trim any commas from beginning and end of string ( after whitespace trimmed );
+        $value = trim(trim($value), ',');
+
+        // next we need to split up the string if it's comma-delimited.
+        $emails = explode(',', $value);
+        $empty  = false; // used to indicate that there is an empty comma.
+        // now let's loop through the emails and do our checks
+        foreach ($emails as $email) {
+            if (empty($email)) {
+                $empty = true;
+                continue;
+            }
+
+            // trim whitespace
+            $email = trim($email);
+            // either its of type "bob@whatever.com", or its of type "fname lname <few@few.few>"
+            if (is_email($email)) {
+                continue;
+            }
+            $matches  = [];
+            $validate = (bool) preg_match('/(.*)<(.+)>/', $email, $matches);
+            if ($validate && is_email($matches[2])) {
+                continue;
+            }
+            return false;
+        }
+
+        return ! ($empty && ! $has_shortcodes);
+    }
+
+
+    /**
+     * Magic getter
+     * Using this to provide back compat with add-ons referencing deprecated properties.
+     *
+     * @param string $property Property being requested
+     * @return mixed
+     * @throws Exception
+     */
+    public function __get($property)
+    {
+        $expected_properties_map = [
+            /**
+             * @deprecated 4.9.0
+             */
+            '_MSGR'   => '_messenger',
+            /**
+             * @deprecated 4.9.0
+             */
+            '_MSGTYP' => '_message_type',
+        ];
+
+        if (isset($expected_properties_map[ $property ])) {
+            return $this->{$expected_properties_map[ $property ]};
+        }
+
+        throw new Exception(
+            sprintf(
+                esc_html__('The property %1$s being requested on %2$s does not exist', 'event_espresso'),
+                $property,
+                get_class($this)
+            )
+        );
+    }
+}

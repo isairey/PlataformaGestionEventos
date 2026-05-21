@@ -1,0 +1,256 @@
+<?php
+
+use EventEspresso\core\services\loaders\LoaderFactory;
+
+/**
+ * EED_Event_Single_Caff
+ *
+ * @package        Event Espresso
+ * @subpackage     /modules/event_single_caff/
+ * @author         Brent Christensen
+ */
+class EED_Event_Single_Caff extends EED_Event_Single
+{
+    /**
+     * @return EED_Event_Single_Caff
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public static function instance()
+    {
+        return parent::get_instance(__CLASS__);
+    }
+
+
+    /**
+     *    set_hooks - for hooking into EE Core, other modules, etc
+     *
+     * @access    public
+     * @return    void
+     */
+    public static function set_hooks()
+    {
+    }
+
+
+    /**
+     *    set_hooks_admin - for hooking into EE Admin Core, other modules, etc
+     *
+     * @access    public
+     * @return    void
+     */
+    public static function set_hooks_admin()
+    {
+        self::setDefinitions();
+        add_action(
+            'FHEE__EE_Admin_Page___load_page_dependencies__after_load__espresso_events__template_settings',
+            ['EED_Event_Single_Caff', 'load_scripts_styles'],
+            10
+        );
+        add_action(
+            'AHEE__template_settings__template__before_settings_form',
+            ['EED_Event_Single_Caff', 'template_settings_form'],
+            10
+        );
+        add_filter(
+            'FHEE__General_Settings_Admin_Page__update_template_settings__data',
+            ['EED_Event_Single_Caff', 'update_template_settings'],
+            10,
+            2
+        );
+        // AJAX
+        add_action(
+            'wp_ajax_espresso_update_event_single_order',
+            ['EED_Event_Single_Caff', 'update_event_single_order']
+        );
+    }
+
+
+    public static function load_scripts_styles()
+    {
+        add_action('admin_enqueue_scripts', ['EED_Event_Single_Caff', 'enqueue_scripts_styles'], 10);
+    }
+
+
+    public static function enqueue_scripts_styles()
+    {
+        wp_register_style(
+            'eed-event-single-sortable',
+            EVENT_SINGLE_CAFF_ASSETS_URL . 'eed_event_single_sortable.css',
+            [],
+            EVENT_ESPRESSO_VERSION
+        );
+        wp_enqueue_style('eed-event-single-sortable');
+        wp_register_script(
+            'eed-event-single-sortable',
+            EVENT_SINGLE_CAFF_ASSETS_URL . 'eed_event_single_sortable.js',
+            ['espresso_core', 'jquery-ui-sortable'],
+            EVENT_ESPRESSO_VERSION,
+            true
+        );
+        wp_enqueue_script('eed-event-single-sortable');
+    }
+
+
+    /**
+     * Set constants only if they haven't been set yet.
+     */
+    public static function setDefinitions()
+    {
+        if (! defined('EVENT_SINGLE_CAFF_TEMPLATES_PATH')) {
+            define('EVENT_SINGLE_CAFF_TEMPLATES_PATH', plugin_dir_path(__FILE__) . 'templates/');
+            define('EVENT_SINGLE_CAFF_ASSETS_URL', plugin_dir_url(__FILE__) . 'assets/');
+        }
+    }
+
+
+    /**
+     *    template_settings_form
+     *
+     * @access    public
+     * @static
+     * @return    void
+     * @throws EE_Error
+     */
+    public static function template_settings_form()
+    {
+        $config                             = EE_Registry::instance()->CFG->template_settings;
+        $config                             =
+            isset($config->EED_Event_Single) && $config->EED_Event_Single instanceof EE_Event_Single_Config
+                ? $config->EED_Event_Single : new EE_Event_Single_Config();
+        $config->use_sortable_display_order = $config->use_sortable_display_order ?? false;
+        $config                             =
+            apply_filters('FHEE__EED_Event_Single__template_settings_form__event_list_config', $config);
+
+        $event_single_order_array                                     = [];
+        $event_single_order_array[ $config->display_order_tickets ]   = 'tickets';
+        $event_single_order_array[ $config->display_order_datetimes ] = 'datetimes';
+        $event_single_order_array[ $config->display_order_event ]     = 'event';
+        $event_single_order_array[ $config->display_order_venue ]     = 'venue';
+        // get template parts
+        $template_parts = EED_Event_Single::instance()->initialize_template_parts($config);
+        // convert to array so that we can add more properties
+        $config                               = get_object_vars($config);
+        $config['event_single_display_order'] = $template_parts->generate_sortable_list_of_template_parts(
+            'event-single-sortable-js',
+            '',
+            'single-sortable-li single-sortable-js'
+        );
+        EEH_Template::display_template(
+            EVENT_SINGLE_CAFF_TEMPLATES_PATH . 'admin-event-single-settings.template.php',
+            $config
+        );
+    }
+
+
+    /**
+     * update_template_settings
+     *
+     * @param EE_Template_Config $CFG
+     * @param array              $REQ
+     * @return EE_Template_Config
+     */
+    public static function update_template_settings(EE_Template_Config $CFG, $REQ): EE_Template_Config
+    {
+        /** @var EE_Capabilities $capabilities */
+        $capabilities = LoaderFactory::getLoader()->getShared(EE_Capabilities::class);
+        if (! $capabilities->current_user_can('ee_edit_events', 'edit-event-template-settings')) {
+            wp_die(esc_html__('You do not have the required privileges to perform this action', 'event_espresso'));
+        }
+        if (! $CFG->EED_Event_Single instanceof EE_Event_Single_Config) {
+            $CFG->EED_Event_Single = new EE_Event_Single_Config();
+        }
+        $display_order_event                                 = $CFG->EED_Event_Single->display_order_event !== null
+            ? $CFG->EED_Event_Single->display_order_event
+            : EED_Event_Single::EVENT_DETAILS_PRIORITY;
+        $display_order_datetimes                             = $CFG->EED_Event_Single->display_order_datetimes !== null
+            ? $CFG->EED_Event_Single->display_order_datetimes
+            : EED_Event_Single::EVENT_DATETIMES_PRIORITY;
+        $display_order_tickets                               = $CFG->EED_Event_Single->display_order_tickets !== null
+            ? $CFG->EED_Event_Single->display_order_tickets
+            : EED_Event_Single::EVENT_TICKETS_PRIORITY;
+        $display_order_venue                                 = $CFG->EED_Event_Single->display_order_venue !== null
+            ? $CFG->EED_Event_Single->display_order_venue
+            : EED_Event_Single::EVENT_VENUES_PRIORITY;
+        $CFG->EED_Event_Single                               = new EE_Event_Single_Config();
+        $CFG->EED_Event_Single->display_status_banner_single = $REQ['display_status_banner_single'] ?? false;
+        $CFG->EED_Event_Single->display_venue                = $REQ['display_venue'] ?? false;
+        $CFG->EED_Event_Single->use_sortable_display_order   =
+            ! empty($REQ['EED_Events_Single_use_sortable_display_order'])
+                ? absint($REQ['EED_Events_Single_use_sortable_display_order'])
+                : 0;
+        $CFG->EED_Event_Single->display_order_event          = $CFG->EED_Event_Single->use_sortable_display_order
+            ? $display_order_event
+            : EED_Event_Single::EVENT_DETAILS_PRIORITY;
+        $CFG->EED_Event_Single->display_order_datetimes      = $CFG->EED_Event_Single->use_sortable_display_order
+            ? $display_order_datetimes
+            : EED_Event_Single::EVENT_DATETIMES_PRIORITY;
+        $CFG->EED_Event_Single->display_order_tickets        = $CFG->EED_Event_Single->use_sortable_display_order
+            ? $display_order_tickets
+            : EED_Event_Single::EVENT_TICKETS_PRIORITY;
+        $CFG->EED_Event_Single->display_order_venue          = $CFG->EED_Event_Single->use_sortable_display_order
+            ? $display_order_venue
+            : EED_Event_Single::EVENT_VENUES_PRIORITY;
+        do_action('AHEE__EED_Event_Single__update_template_settings__after_update', $CFG, $REQ);
+        return $CFG;
+    }
+
+
+    /**
+     * @return void
+     * @throws EE_Error
+     * @throws ReflectionException
+     */
+    public static function update_event_single_order()
+    {
+        /** @var EE_Capabilities $capabilities */
+        $capabilities = LoaderFactory::getLoader()->getShared(EE_Capabilities::class);
+        if (! $capabilities->current_user_can('ee_edit_events', 'edit-event-template-settings')) {
+            wp_die(esc_html__('You do not have the required privileges to perform this action', 'event_espresso'));
+        }
+        if (
+            ! isset(EE_Registry::instance()->CFG->template_settings->EED_Event_Single)
+            || ! EE_Registry::instance()->CFG->template_settings->EED_Event_Single instanceof EE_Event_Single_Config
+        ) {
+            EE_Registry::instance()->CFG->template_settings->EED_Event_Single = new EE_Event_Single_Config();
+        }
+        $config_saved   = false;
+        $template_parts = EED_Event_Single_Caff::getRequest()->getRequestParam('elements');
+        if (! empty($template_parts)) {
+            $template_parts = explode(',', trim($template_parts, ','));
+            foreach ($template_parts as $key => $template_part) {
+                $template_part                                                                      =
+                    "display_order_$template_part";
+                $priority                                                                           =
+                    ($key * 10) + EED_Event_Single::EVENT_DETAILS_PRIORITY;
+                EE_Registry::instance()->CFG->template_settings->EED_Event_Single->{$template_part} = $priority;
+                do_action("AHEE__EED_Event_Single__update_event_single_order__$template_part", $priority);
+            }
+            $config_saved = EE_Registry::instance()->CFG->update_espresso_config(false, false);
+        }
+        if ($config_saved) {
+            EE_Error::add_success(esc_html__('Display Order has been successfully updated.', 'event_espresso'));
+        } else {
+            EE_Error::add_error(
+                esc_html__('Display Order was not updated.', 'event_espresso'),
+                __FILE__,
+                __FUNCTION__,
+                __LINE__
+            );
+        }
+        echo wp_json_encode(EE_Error::get_notices(false));
+        exit();
+    }
+
+
+    /**
+     *    run - initial module setup
+     *
+     * @access    public
+     * @param WP $WP
+     * @return    void
+     */
+    public function run($WP)
+    {
+    }
+}
