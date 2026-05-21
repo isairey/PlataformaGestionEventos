@@ -1,101 +1,491 @@
-# Event Espresso Core
+<div align="center">
 
-[![Latest Tag](https://img.shields.io/github/tag/eventespresso/event-espresso-core.svg?style=flat&label=Latest%20Tag)](https://github.com/eventespresso/event-espresso-core/releases)
-[![Travis](https://travis-ci.com/eventespresso/event-espresso-core.svg?branch=master)](https://travis-ci.com/eventespresso/event-espresso-core)
-[![PHP](https://img.shields.io/badge/PHP-7%20Ready-brightgreen.svg?style=flat)](https://eventespresso.com/)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=eventespresso/event-espresso-core)](https://dependabot.com)
-[![WordPress](https://img.shields.io/badge/WordPress-v4.7.x+%20Tested-brightgreen.svg?style=flat)](https://eventespresso.com/)
-[![License](https://img.shields.io/badge/License-GPLv2-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Join Chat](https://img.shields.io/badge/Slack-Join%20Chat-aa30ff.svg?style=flat)](https://eventespresso.com/contact/community-chat/)
+<img width="220" src="https://cdn-icons-png.flaticon.com/512/3658/3658773.png" />
 
-## Event Espresso 4 - Event Ticketing and Registration System
+# 🎟️ Event Espresso Core
 
-[Event Espresso](https://eventespresso.com/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=event+espresso+link) is an event ticketing and registration platform for [WordPress](http://wordpress.org/). Event Espresso makes it easy for you to register attendees for classes, workshops, events, trainings, conferences or concerts, all from your WordPress website. Event Espresso events are created from the WordPress admin area. You can create signup forms to collect information about your attendees, accept payments, and create reports.
+### Plataforma profesional de gestión de eventos y venta de boletos para WordPress 🚀
 
-## Support License
-Purchase a [Premium Support License](https://eventespresso.com/pricing/?ee_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=premium+support+license) to get access to more features (including [one-click upgrades](https://eventespresso.com/features/one-click-upgrades/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=one+click+upgrades), [growing list of add-ons](https://eventespresso.com/add-ons/?ee_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=growing+list+of+addons)).
+<p align="center">
+  <b>Event Espresso Core</b> es un potente sistema de registro de asistentes, gestión de eventos y venta de tickets desarrollado para WordPress, diseñado para conferencias, talleres, conciertos, capacitaciones y eventos empresariales.
+</p>
 
-## Installing Event Espresso
-Event Espresso can be installed via the WordPress Dashboard or through FTP or SFTP.
+<p align="center">
+  <img src="https://img.shields.io/badge/WordPress-Plugin-21759B?style=for-the-badge&logo=wordpress&logoColor=white">
+  <img src="https://img.shields.io/badge/PHP-7+-777BB4?style=for-the-badge&logo=php&logoColor=white">
+  <img src="https://img.shields.io/badge/Event%20Management-System-FF6B35?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Open%20Source-GPLv2-green?style=for-the-badge">
+</p>
 
-[View Event Espresso 4 Install Documentation →](https://eventespresso.com/wiki/installing-event-espresso/?ee_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=view+ee4+install+documentation)
+<p align="center">
+  <a href="#-acerca-del-proyecto">Acerca</a> •
+  <a href="#-características">Características</a> •
+  <a href="#-tecnologías-utilizadas">Tecnologías</a> •
+  <a href="#-instalación">Instalación</a> •
+  <a href="#-arquitectura-del-sistema">Arquitectura</a>
+</p>
 
-## Documentation
-Resources on Event Espresso 4 for a beginner to advanced users.
+</div>
 
-[View Event Espresso 4 Documentation →](https://eventespresso.com/support/documentation/versioned-docs?doc_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=view+ee4+documentation)
+---
 
-Notable changes for each released version of the project can be found in our [changelog](https://eventespresso.com/wiki/ee4-changelog/)
+# 🎟️ Acerca del proyecto
 
-## Mobile Event Apps
-The Event Espresso 4 check-in & ticket scanning event app is available for [Android](http://evts.io/EE4_Android_App?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+android) and [Apple](http://evts.io/EE4_Apple_App?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+apple) devices.
+**Event Espresso Core** es una plataforma avanzada de gestión de eventos integrada con WordPress que permite administrar registros, asistentes, pagos y tickets desde un panel centralizado.
 
-[View Mobile Event App Documentation →](https://eventespresso.com/wiki/ee4-event-apps/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+documentation)
+El sistema fue desarrollado para:
 
-## Newsletter
-Be the first to know when we ship new features ... [signup here](https://eventespresso.com/newsletter/).
+- 🎫 Gestionar tickets y registros
+- 📅 Administrar eventos profesionales
+- 💳 Procesar pagos en línea
+- 👥 Gestionar asistentes
+- 📊 Crear reportes y estadísticas
+- 🌐 Automatizar procesos de eventos
+- 📱 Integrar aplicaciones móviles
+- ⚡ Escalar eventos empresariales
 
-## Community Chat
-Join a real-time community chat group for professionals that are leading the way in events from event management, event technology and event marketing to work-life balance.
+La plataforma proporciona todas las herramientas necesarias para organizar eventos modernos desde WordPress de forma eficiente y segura.
 
-[Join the Discussion →](https://eventsmart.com/contact/community-chat/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=community+chat)
+---
 
+# ✨ Características
 
-## Developers
+## 🎟️ Gestión de eventos
 
-**This is the full version of the plugin** and provides everything that you need to [sell tickets](https://eventespresso.com/features/multiple-ticket-pricing-options/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=sell+tickets), [collect payments](https://eventespresso.com/features/payment-options/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=collect+payments), and [manage events](https://eventespresso.com/features/event-management/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=manage+events) all from within your WordPress dashboard.
+- 📅 Creación de eventos
+- 🎫 Venta de tickets
+- 👥 Registro de asistentes
+- 🏢 Gestión de conferencias
+- 🎤 Administración de speakers
+- 🗓️ Control de horarios
 
+---
 
-Buy a **[Premium Support License](https://eventespresso.com/pricing/?ee_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=premium+support+license)** to get access to more features (including [one-click upgrades](https://eventespresso.com/features/one-click-upgrades/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=one+click+upgrades), [growing list of add-ons](https://eventespresso.com/add-ons/?ee_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=growing+list+of+addons)).
+## 💳 Sistema de pagos
 
-**Note:** for non stable versions. We currently use minor versioning numbers such as (4.1.rc.125) for rapid development occurring.  On master, minor versions represent minor releases i.e. (4.1.1.p) that typically only include bug fixes and minor features.  Releases including bigger features bump the second number (i.e. 4.1.1 -> 4.2.0 ).  "rc" in the version number indicates that it is a non-stable release candidate version.  "p" in the version number indicates a released version (usually only tags will have .p) In the list below we **do not** include minor version numbers.
+- 💰 Procesamiento de pagos
+- 💳 Integración con pasarelas
+- 📊 Control financiero
+- 🧾 Facturación
+- 🔒 Pagos seguros
+- 🌐 Transacciones online
 
+---
 
-This is the Core for Event Espresso 4. This README.md file is targeted for display with our GitHub repo.  For detailed information via traditional readme, see the readme.txt file.
+## 👥 Gestión de asistentes
 
-> Extra:  The code structure and phpdoc parsed documentation can be found at http://code.eventespresso.com
->
-> Developer Targeted Documentation can be found at http://developer.eventespresso.com/docs
-> Developer News & Updates can be found at http://developer.eventespresso.com
+- 👤 Registro de usuarios
+- 📋 Formularios personalizados
+- 📧 Notificaciones automáticas
+- 🎟️ Check-in digital
+- 📱 Escaneo de tickets
+- 📊 Seguimiento de asistencia
 
+---
 
-## Event Espresso Releases
+## 📱 Aplicaciones móviles
 
-At Event Espresso we follow a set pattern for releases:
+- 📲 Ticket scanning
+- 🎫 Check-in móvil
+- ⚡ Validación en tiempo real
+- 🌐 Sincronización cloud
+- 📊 Estadísticas móviles
 
-1. Active development for new features happens on a **FET/{ticket-number}/{description}** branch.  We continually merge master into the feature branch while its in development.  Once its complete, then testing is done on it and its merged back to master ready for release.
-2. Bug fixes etc. are done on a **BUG/{ticket-number}/{description}** branch.  Same methodology is used as with Feature branches.
-3. Stable releases are tagged both with a tests folder and without the tests folder.
-4. Master is technically always production ready and release ready but may not be equal to what the current stable release is (that is what tags are for).
+---
 
+# 👨‍💻 Módulos del sistema
 
-## Testing
+## 🎟️ Event Management Module
 
-For all testers on GitHub, please take note of the following when reporting issues.
+### Funcionalidades:
 
-1. There is a difference between a feature and a bug, we consider a bug is something that reveals brokenness in intended functionality.  A feature, is something beyond intended functionality.  To help determine the difference, think about your issue like this, "I know A does C, however I *wish* it did D."  If you find yourself saying that, its a feature.  For Event Espresso,  GitHub is not the place to suggest a new feature UNLESS you've already got a pull request to implement it (see pull requests section below).  Info on sponsoring new features can [be found here](https://eventespresso.com/rich-features/sponsor-new-features/).  If you aren't sure whether something is a feature or bug feel free to post the issue - however we give priority to bug issues here.
-2. UI/UX issues may be considered a bug but not if it requires a major change in design.  Feel free to report things you find confusing or needing improvement however reports accompanied by a pull request will likely get faster attention.
-3. Report your issue as clearly as possible.  By "clear" we mean:
+- 📅 Creación de eventos
+- 🎤 Gestión de speakers
+- 🏢 Control de venues
+- 🗓️ Programación
+- 📊 Reportes
 
-	i. Specify the branch this occurred in.
+---
 
-	ii. Be specific about the steps you took to reproduce.
+## 💳 Payment Module
 
-	iii. Feel free to use screenshots/screencasts to illustrate
+### Funcionalidades:
 
-	iv. Use URLs for the page the issue to place on where possible.
+- 💰 Cobros online
+- 💳 Pasarelas de pago
+- 🧾 Facturación
+- 📊 Reportes financieros
+- 🔒 Seguridad de pagos
 
-4. Don't "bump" bug reports if we don't respond right away.  We see every report coming in, but we'll only reply if we need clarification or if we think its invalid.  Otherwise, we're likely working on a fix and the issue will be updated when the fix is complete.
+---
 
-## Pull Requests
-One of the reasons we published this repository on GitHub is because we wanted to open up EE development to 3rd party developers who might want to contribute to the codebase. GitHub makes this really easy to do so via pull requests.  If you don't know what pull requests are, please read up on them via the GitHub help/documentation.
+## 👥 Registration Module
 
-Here's how we deal with pull requests for our repo:
+### Funcionalidades:
 
-1. Any new FEATURES in a pull request should be based off of the *master* branch. If your feature pull request is based off any other branch it will not be considered.
-2. Any BUGFIX pull requests should be based off of the branch the bug was found.  Please verify if it is in master before submitting the pull request.  If it is in reproducible on master, we'd prefer to have the pull request based off master.
-3. We greatly appreciate any pull-requests submitted for consideration, but please understand we are very selective in what we decide to include in EE core.  If the "feature" is something that expands too much on our design decisions for EE core then we may suggest you develop your pull request into an add-on for EE.
+- 👤 Registro de usuarios
+- 🎫 Tickets digitales
+- 📧 Emails automáticos
+- 📋 Formularios personalizados
+- 📱 Confirmaciones
 
+---
 
-You may find [our post on contributing to open source software](https://eventespresso.com/2017/02/5-tips-for-contributing-to-open-source-software-like-event-espresso/) helpful.
+## 📱 Mobile Event Apps
 
+### Funcionalidades:
+
+- 🎟️ Ticket scanner
+- 📲 Mobile check-in
+- ⚡ Verificación rápida
+- 🌐 Cloud sync
+- 📊 Estadísticas
+
+---
+
+# 🛠️ Tecnologías utilizadas
+
+## ⚙️ Backend
+
+<p>
+  <img src="https://skillicons.dev/icons?i=php" />
+</p>
+
+- PHP 7+
+- WordPress Plugin API
+- MySQL
+- REST APIs
+- MVC Architecture
+
+---
+
+## 🌐 Frontend
+
+<p>
+  <img src="https://skillicons.dev/icons?i=html,css,js" />
+</p>
+
+- HTML5
+- CSS3
+- JavaScript
+- Responsive Design
+- WordPress Admin UI
+
+---
+
+## ☁️ Infraestructura
+
+<p>
+  <img src="https://skillicons.dev/icons?i=aws,docker" />
+</p>
+
+- Cloud Integration
+- Payment APIs
+- Mobile Services
+- Docker Support
+- API Services
+
+---
+
+## 🧰 Herramientas
+
+<p>
+  <img src="https://skillicons.dev/icons?i=git,github,vscode" />
+</p>
+
+- Git
+- GitHub
+- VS Code
+- Travis CI
+- Dependabot
+
+---
+
+# 📂 Estructura del proyecto
+
+```bash
+event-espresso-core/
+│
+├── core/
+│   ├── admin/
+│   ├── domain/
+│   ├── libraries/
+│   ├── services/
+│   └── templates/
+│
+├── modules/
+│   ├── events/
+│   ├── payments/
+│   ├── attendees/
+│   └── tickets/
+│
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── mobile-apps/
+├── tests/
+├── docs/
+├── README.md
+└── LICENSE
+```
+
+---
+
+# 🏗️ Arquitectura del sistema
+
+## ⚡ Arquitectura principal
+
+```text
+Usuario → WordPress → Event Espresso Core → Database → Payment Gateway
+```
+
+---
+
+## 🔄 Flujo del sistema
+
+```text
+Evento → Registro → Pago → Ticket → Check-in → Reportes
+```
+
+---
+
+# 📊 Funcionalidades principales
+
+## 🎫 Venta de tickets
+
+- Tickets digitales
+- Múltiples precios
+- Control de stock
+- Reservaciones
+- Confirmaciones automáticas
+
+---
+
+## 📅 Gestión de eventos
+
+- Creación de eventos
+- Programación
+- Gestión de speakers
+- Control de venues
+- Administración centralizada
+
+---
+
+## 💳 Procesamiento de pagos
+
+- Pagos online
+- Facturación
+- Reportes financieros
+- Seguridad avanzada
+- Integración con gateways
+
+---
+
+## 📱 Mobile Event Apps
+
+- Escaneo de tickets
+- Check-in rápido
+- Gestión móvil
+- Estadísticas en tiempo real
+- Validación cloud
+
+---
+
+# 🔐 Seguridad
+
+## 🛡️ Protección del sistema
+
+- 🔒 Seguridad WordPress
+- 💳 Pagos protegidos
+- 🔑 Gestión de permisos
+- 🛡️ Validación de datos
+- ⚡ Protección API
+- 🌐 Seguridad cloud
+
+---
+
+# ⚡ Instalación
+
+## 📋 Requisitos
+
+- PHP 7+
+- WordPress 4.7+
+- MySQL
+- Apache/Nginx
+- Composer
+
+---
+
+# 🚀 Configuración del proyecto
+
+## 1️⃣ Clonar repositorio
+
+```bash
+git clone https://github.com/eventespresso/event-espresso-core.git
+```
+
+---
+
+## 2️⃣ Entrar al proyecto
+
+```bash
+cd event-espresso-core
+```
+
+---
+
+## 3️⃣ Instalar dependencias
+
+```bash
+composer install
+```
+
+---
+
+## 4️⃣ Configurar WordPress
+
+Instalar el plugin dentro de WordPress y activar desde el panel administrativo.
+
+---
+
+## 5️⃣ Ejecutar sistema
+
+```bash
+http://localhost/wp-admin
+```
+
+---
+
+# 💻 Ejemplo de funcionalidades
+
+## 🎫 Registro de asistentes
+
+```php
+$attendee = EE_Attendee::new_instance(array(
+    'ATT_fname' => 'John',
+    'ATT_lname' => 'Doe',
+    'ATT_email' => 'john@example.com'
+));
+```
+
+---
+
+## 💳 Procesamiento de tickets
+
+```php
+$ticket = EE_Ticket::new_instance(array(
+    'TKT_name' => 'VIP Ticket',
+    'TKT_price' => 99.99
+));
+```
+
+---
+
+# 📸 Vista previa
+
+## 🖥️ Interfaces del sistema
+
+<div align="center">
+
+### 🎟️ Gestión de eventos
+![Events](https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1200)
+
+### 👥 Registro de asistentes
+![Attendees](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200)
+
+### 💳 Venta de tickets
+![Tickets](https://images.unsplash.com/photo-1556740749-887f6717d7e4?q=80&w=1200)
+
+</div>
+
+---
+
+# 🧠 Objetivos del proyecto
+
+## 🎯 Gestión profesional de eventos
+
+- WordPress Event Systems
+- Ticket Management
+- Payment Integration
+- Registration Platforms
+- Mobile Event Apps
+- Enterprise Event Management
+- Event Automation
+
+---
+
+# 🚧 Roadmap
+
+## 🔮 Próximas mejoras
+
+- 📱 Aplicación móvil avanzada
+- 🤖 Automatización con IA
+- 🌐 Multi-tenant events
+- 📊 Analytics avanzados
+- ☁️ Cloud infrastructure
+- 🎟️ NFT Tickets
+- 🔔 Smart notifications
+
+---
+
+# 🤝 Contribuciones
+
+Las contribuciones son bienvenidas ❤️
+
+## Cómo contribuir
+
+1. Fork del proyecto
+
+```bash
+git checkout -b feature/nueva-funcionalidad
+```
+
+2. Commit
+
+```bash
+git commit -m "✨ Nueva funcionalidad"
+```
+
+3. Push
+
+```bash
+git push origin feature/nueva-funcionalidad
+```
+
+4. Pull Request 🚀
+
+---
+
+# 👨‍💻 Desarrolladores
+
+<div align="center">
+
+## Event Espresso Team
+
+Desarrolladores apasionados por la gestión de eventos, WordPress y plataformas empresariales 🚀
+
+</div>
+
+---
+
+# 🌟 Apoya el proyecto
+
+⭐ Dale una estrella  
+🍴 Haz fork  
+📢 Comparte el proyecto
+
+---
+
+# 📜 Licencia
+
+Proyecto open source bajo licencia GPL v2 orientado a la gestión profesional de eventos y venta de tickets en WordPress.
+
+---
+
+<div align="center">
+
+### 🎟️ Event Espresso Core — gestión profesional de eventos 🚀
+
+</div>
