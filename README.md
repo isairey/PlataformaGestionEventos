@@ -204,7 +204,7 @@ La plataforma proporciona todas las herramientas necesarias para organizar event
 # 📂 Estructura del proyecto
 
 ```bash
-event-espresso-core/
+PlataformaGestionEventos/
 │
 ├── core/
 │   ├── admin/
@@ -323,7 +323,7 @@ Evento → Registro → Pago → Ticket → Check-in → Reportes
 ## 1️⃣ Clonar repositorio
 
 ```bash
-git clone https://github.com/eventespresso/event-espresso-core.git
+git clone https://github.com/isairey/PlataformaGestionEventos.git
 ```
 
 ---
@@ -331,7 +331,7 @@ git clone https://github.com/eventespresso/event-espresso-core.git
 ## 2️⃣ Entrar al proyecto
 
 ```bash
-cd event-espresso-core
+cd PlataformaGestionEventos
 ```
 
 ---
@@ -458,13 +458,13 @@ git push origin feature/nueva-funcionalidad
 
 ---
 
-# 👨‍💻 Desarrolladores
+# 👨‍💻 Desarrollador
 
 <div align="center">
 
-## Event Espresso Team
+## Isai Reyes - Full Stack
 
-Desarrolladores apasionados por la gestión de eventos, WordPress y plataformas empresariales 🚀
+Desarrollador apasionado por la gestión de eventos, WordPress y plataformas empresariales 🚀
 
 </div>
 
